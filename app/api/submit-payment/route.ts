@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "https://discord.com/api/webhooks/1494551497709715456/8tvju5XyGi_67EkC3Dg8uKqMyZGyPi_Du1AZ6jb5gWYuT9r18hgUL3r0jIKoMswf82Sl";
+const SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const session = await getServerSession();
-    if (!session?.user?.id) {
+    const token = await getToken({ req: request, secret: SECRET });
+    if (!token?.sub) {
       return NextResponse.json(
         { error: "You must be logged in to make a payment" },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
+    const userId = token.sub as string;
     const formData = await request.formData();
     const discord = formData.get("discord") as string;
     const plan = formData.get("plan") as string;
@@ -56,6 +57,18 @@ export async function POST(request: NextRequest) {
       lifetime: "Forever",
     };
 
+    // Fetch user data
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
     // Create payment record in database
     const payment = await prisma.payment.create({
       data: {
@@ -73,7 +86,7 @@ export async function POST(request: NextRequest) {
       fields: [
         {
           name: "User",
-          value: `<@${session.user.username}> (${session.user.email})`,
+          value: `<@${user.username}> (${user.email})`,
           inline: false,
         },
         {
@@ -130,7 +143,7 @@ export async function POST(request: NextRequest) {
       const discordFormData = new FormData();
       
       const payload = {
-        content: `**New Payment Request** from \`${session.user.username}\``,
+        content: `**New Payment Request** from \`${user.username}\``,
         embeds: [embed],
         components: [
           {
@@ -173,7 +186,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       const payload = {
-        content: `**New Payment Request** from \`${session.user.username}\``,
+        content: `**New Payment Request** from \`${user.username}\``,
         embeds: [embed],
         components: [
           {

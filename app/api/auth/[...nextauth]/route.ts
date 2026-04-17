@@ -3,7 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/db'
 import { verifyPassword } from '@/lib/auth'
 
-const handler = NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -65,6 +65,8 @@ const handler = NextAuth({
   session: {
     strategy: 'jwt',
   },
-})
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }

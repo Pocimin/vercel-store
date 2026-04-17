@@ -111,6 +111,21 @@ export function HeroSection() {
           </Button>
         </motion.div>
 
+        {/* Already Have Key Link */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.45 }}
+          className="mt-4"
+        >
+          <Link
+            href="/dashboard"
+            className="text-sm text-muted-foreground hover:text-accent transition-colors"
+          >
+            Already have a key? <span className="underline">Redeem it on Dashboard</span>
+          </Link>
+        </motion.div>
+
         {/* Trust Indicators */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

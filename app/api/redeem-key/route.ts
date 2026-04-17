@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
 import { findUser } from "@/lib/vonalia";
 
 const VONALIA_API_KEY = process.env.VONALIA_API_KEY;
+const SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const token = await getToken({ req: request, secret: SECRET });
     
-    if (!session?.user?.id) {
+    if (!token?.sub) {
       return NextResponse.json(
         { error: "You must be logged in" },
         { status: 401 }
       );
     }
+    
+    const userId = token.sub as string;
 
     const { key } = await request.json();
 
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user already has a license
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
     });
 
     if (user?.licenseKey) {
@@ -80,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     // Update user with license info
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: {
         licenseKey: key,
         licensePassword: key, // Store key as password for validation

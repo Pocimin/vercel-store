@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -10,6 +12,8 @@ import {
   Upload,
   ExternalLink,
   AlertCircle,
+  Loader2,
+  LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,6 +80,11 @@ const whitelistFeatures = [
 type PaymentMethod = "qris" | "paypal" | "robux" | null;
 
 export default function PremiumPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const isAuthenticated = status === "authenticated";
+  const isLoading = status === "loading";
+
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
@@ -84,7 +93,61 @@ export default function PremiumPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Redirect to login if not authenticated (after loading)
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login?callbackUrl=/premium");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
   const selectedPlanData = plans.find((p) => p.id === selectedPlan);
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-accent" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Show login required (should redirect quickly, but just in case)
+  if (!isAuthenticated) {
+    return (
+      <main className="min-h-screen bg-background pt-20">
+        <div className="container mx-auto px-4 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto text-center"
+          >
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
+                  <LogIn className="w-8 h-8 text-yellow-500" />
+                </div>
+                <CardTitle>Login Required</CardTitle>
+                <CardDescription>
+                  You need to be logged in to purchase premium access
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button asChild className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950">
+                  <Link href="/login?callbackUrl=/premium">Login to Continue</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/register">Create Account</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -146,9 +209,8 @@ export default function PremiumPage() {
             </div>
             <h1 className="text-3xl font-bold mb-4">Payment Submitted!</h1>
             <p className="text-muted-foreground mb-8">
-              Your payment proof has been received. Please wait for verification
-              (usually within 1-24 hours). You will receive your key via Discord
-              DM.
+              Your payment proof has been received. Please wait for admin verification.
+              You can check your payment status in the dashboard.
             </p>
             <div className="flex flex-col gap-3">
               <motion.div

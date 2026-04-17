@@ -5,6 +5,7 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { PageTransition } from "@/components/page-transition";
+import { AuthProvider } from "@/components/session-provider";
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -41,12 +42,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">
-          <PageTransition>{children}</PageTransition>
-        </main>
-        <Footer />
-        {process.env.NODE_ENV === "production" && <Analytics />}
+        <AuthProvider>
+          <Header />
+          <main className="flex-1">
+            <PageTransition>{children}</PageTransition>
+          </main>
+          <Footer />
+          {process.env.NODE_ENV === "production" && <Analytics />}
+        </AuthProvider>
       </body>
     </html>
   );

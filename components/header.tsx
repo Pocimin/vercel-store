@@ -3,13 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Crown, Menu, Sparkles, Terminal, X } from "lucide-react";
+import { Crown, Menu, Sparkles, Terminal, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
 
   const scrollToFreeScript = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,25 +61,41 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button
-            onClick={scrollToFreeScript}
-            variant="ghost"
-            size="sm"
-            className="text-accent"
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Free Script
-          </Button>
-          <Button
-            asChild
-            size="sm"
-            className="bg-yellow-500 hover:bg-yellow-600 text-yellow-950"
-          >
-            <Link href="/premium">
-              <Crown className="mr-2 h-4 w-4" />
-              Buy Premium
-            </Link>
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <span className="text-sm text-muted-foreground">
+                Hi, {session?.user?.username}
+              </span>
+              <Button
+                onClick={() => signOut()}
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="text-accent">
+                <Link href="/login">
+                  <User className="mr-2 h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                className="bg-yellow-500 hover:bg-yellow-600 text-yellow-950"
+              >
+                <Link href="/register">
+                  <Crown className="mr-2 h-4 w-4" />
+                  Get Premium
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <button
@@ -122,23 +141,39 @@ export function Header() {
                 Dashboard
               </Link>
               <div className="mt-4 flex flex-col gap-2">
-                <Button
-                  onClick={scrollToFreeScript}
-                  variant="outline"
-                  className="w-full justify-center text-accent border-accent"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Get Free Script
-                </Button>
-                <Button
-                  asChild
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950"
-                >
-                  <Link href="/premium">
-                    <Crown className="mr-2 h-4 w-4" />
-                    Buy Premium
-                  </Link>
-                </Button>
+                {isAuthenticated ? (
+                  <>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Logged in as {session?.user?.username}
+                    </p>
+                    <Button
+                      onClick={() => signOut()}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href="/login">
+                        <User className="mr-2 h-4 w-4" />
+                        Login
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950"
+                    >
+                      <Link href="/register">
+                        <Crown className="mr-2 h-4 w-4" />
+                        Get Premium
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </motion.div>

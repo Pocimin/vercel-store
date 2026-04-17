@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  password      String
+  robloxUsername String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // License info
+  licenseKey    String?
+  licensePassword String?
+  licenseType   String?   // weekly, monthly, lifetime
+  licenseExpiresAt DateTime?
+  
+  // Payment tracking
+  payments      Payment[]
+}
+
+model Payment {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  
+  plan          String    // weekly, monthly, lifetime
+  paymentMethod String    // qris, paypal, robux
+  status        String    @default("pending") // pending, approved, declined
+  
+  proofUrl      String?   // URL to payment proof image
+  
+  discordMessageId String? // Discord webhook message ID for approve/decline
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  processedAt   DateTime?
+  processedBy   String?   // Discord username who approved/declined
+  declineReason String?
+}

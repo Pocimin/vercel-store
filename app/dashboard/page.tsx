@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -16,6 +18,10 @@ import {
   Terminal,
   AlertCircle,
   Loader2,
+  LogIn,
+  Package,
+  CreditCard,
+  Clock3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,33 +31,67 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
-interface UserData {
+interface UserLicense {
   key: string;
   plan: string;
-  expiresAt: string;
-  hwid: string;
-  robloxUsername: string;
+  expiresAt: string | null;
+}
+
+interface Payment {
+  id: string;
+  plan: string;
+  status: string;
+  createdAt: string;
+}
+
+interface DashboardData {
+  hasLicense: boolean;
+  license?: UserLicense;
+  pendingPayment?: Payment;
 }
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const isAuthenticated = status === "authenticated";
+  const isLoading = status === "loading";
+
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
-  const [keyInput, setKeyInput] = useState("");
-  const [isValidKey, setIsValidKey] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [userData, setUserData] = useState<UserData | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const premiumScript = `loadstring(game:HttpGet("https://raw.githubusercontent.com/nznt/dds-hub/main/premium.lua"))()`;
+  const premiumScript = `loadstring(game:HttpGet("https://beta.vonalia.com/Obfuscate/nzntpremium"))()`;
+
+  // Fetch dashboard data
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated]);
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch("/api/dashboard");
+      if (response.ok) {
+        const dashboardData = await response.json();
+        setData(dashboardData);
+      }
+    } catch (e) {
+      console.error("Failed to fetch dashboard data:", e);
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const handleCopyKey = () => {
-    if (userData?.key) {
-      navigator.clipboard.writeText(userData.key);
+    if (data?.license?.key) {
+      navigator.clipboard.writeText(data.license.key);
       setCopiedKey(true);
       setTimeout(() => setCopiedKey(false), 2000);
     }
@@ -63,40 +103,9 @@ export default function DashboardPage() {
     setTimeout(() => setCopiedScript(false), 2000);
   };
 
-  const handleValidateKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsValidating(true);
-
-    try {
-      const response = await fetch("/api/validate-key", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ key: keyInput }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.valid) {
-        setError(data.error || "Invalid key");
-        setIsValidating(false);
-        return;
-      }
-
-      setUserData(data.userData);
-      setIsValidKey(true);
-    } catch {
-      setError("Failed to validate key. Please try again.");
-    } finally {
-      setIsValidating(false);
-    }
-  };
-
   const handleResetHWID = async () => {
-    if (!userData?.key) return;
-    
+    if (!data?.license?.key) return;
+
     setIsResetting(true);
     setError("");
 
@@ -106,13 +115,13 @@ export default function DashboardPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ key: userData.key }),
+        body: JSON.stringify({ key: data.license.key }),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to reset HWID");
+        setError(result.error || "Failed to reset HWID");
         setIsResetting(false);
         return;
       }
@@ -126,302 +135,358 @@ export default function DashboardPage() {
     }
   };
 
-  const isLifetime = userData?.plan?.toLowerCase() === "lifetime";
+  // Show loading state
+  if (isLoading || isLoadingData) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-accent" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Show login required
+  if (!isAuthenticated) {
+    return (
+      <main className="min-h-screen bg-background pt-20">
+        <div className="container mx-auto px-4 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto text-center"
+          >
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4">
+                  <LogIn className="w-8 h-8 text-accent" />
+                </div>
+                <CardTitle>Login Required</CardTitle>
+                <CardDescription>
+                  Please sign in to view your dashboard
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button asChild className="w-full bg-accent hover:bg-accent/90">
+                  <Link href="/login?callbackUrl=/dashboard">Sign In</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/register">Create Account</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </main>
+    );
+  }
+
+  const isLifetime = data?.license?.plan?.toLowerCase() === "lifetime";
 
   return (
     <main className="min-h-screen bg-background pt-20">
       <div className="container mx-auto px-4 py-12">
-        {/* If not validated, show key input */}
-        {!isValidKey ? (
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Back Link */}
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
+
+          {/* Welcome */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="max-w-md mx-auto"
+            className="text-center"
           >
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
-            <Card className="border-border bg-card">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
-                  <Key className="w-8 h-8 text-yellow-500" />
-                </div>
-                <CardTitle>Enter Your Key</CardTitle>
-                <CardDescription>
-                  Enter your premium key to access the dashboard
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleValidateKey} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="key">Premium Key</Label>
-                    <Input
-                      id="key"
-                      placeholder="Enter your key here..."
-                      value={keyInput}
-                      onChange={(e) => setKeyInput(e.target.value)}
-                      className="bg-muted border-border font-mono"
-                    />
-                  </div>
-                  {error && (
-                    <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                      {error}
-                    </div>
-                  )}
-                  <Button
-                    type="submit"
-                    disabled={isValidating || !keyInput.trim()}
-                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950 font-bold"
-                  >
-                    {isValidating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Validating...
-                      </>
-                    ) : (
-                      "Validate Key"
-                    )}
-                  </Button>
-                </form>
-                <div className="mt-6 pt-6 border-t border-border text-center">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Don&apos;t have a key?
-                  </p>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/premium">Get Premium</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome, <span className="text-accent">{session?.user?.username}</span>
+            </h1>
+            <p className="text-muted-foreground">
+              Manage your account and premium access
+            </p>
           </motion.div>
-        ) : (
-          /* Dashboard Content */
-          <div className="max-w-4xl mx-auto space-y-8">
-            {/* Back Link */}
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
 
-            {/* Welcome */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
-            >
-              <h1 className="text-3xl font-bold mb-2">
-                Welcome, <span className="text-yellow-400">Premium</span> User
-              </h1>
-              <p className="text-muted-foreground">
-                Manage your subscription and access your premium script
-              </p>
-            </motion.div>
-
-            {/* Status Cards */}
+          {/* No License - Show options */}
+          {!data?.hasLicense && !data?.pendingPayment && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="grid md:grid-cols-3 gap-4"
             >
               <Card className="border-border bg-card">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-yellow-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Plan</p>
-                      <p className="font-semibold">{userData?.plan || "Unknown"}</p>
-                    </div>
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Package className="w-8 h-8 text-yellow-500" />
                   </div>
+                  <CardTitle>No Active License</CardTitle>
+                  <CardDescription>
+                    You don&apos;t have an active premium license yet
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button asChild className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950">
+                    <Link href="/premium">Purchase Premium</Link>
+                  </Button>
                 </CardContent>
               </Card>
-              <Card className="border-border bg-card">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-accent" />
+            </motion.div>
+          )}
+
+          {/* Pending Payment */}
+          {data?.pendingPayment && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <Card className="border-yellow-500/30 bg-yellow-500/5">
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                      <Clock3 className="w-6 h-6 text-yellow-500" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Expires</p>
-                      <p className="font-semibold">{userData?.expiresAt || "Unknown"}</p>
+                      <CardTitle>Payment Pending</CardTitle>
+                      <CardDescription>
+                        Your payment is awaiting admin approval
+                      </CardDescription>
                     </div>
                   </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Plan</span>
+                      <Badge variant="secondary">{data.pendingPayment.plan}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status</span>
+                      <Badge variant="outline" className="text-yellow-500 border-yellow-500">
+                        ⏳ Pending
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Submitted</span>
+                      <span>{new Date(data.pendingPayment.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    An admin will review your payment soon. You&apos;ll receive your key once approved.
+                  </p>
                 </CardContent>
               </Card>
-              <Card className="border-border bg-card">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">HWID Resets</p>
-                      <div className="flex items-center gap-1">
-                        <Infinity className="w-4 h-4 text-green-500" />
-                        <span className="font-semibold text-green-500">
-                          Unlimited
-                        </span>
+            </motion.div>
+          )}
+
+          {/* Has License - Show Dashboard */}
+          {data?.hasLicense && data?.license && (
+            <>
+              {/* Status Cards */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="grid md:grid-cols-3 gap-4"
+              >
+                <Card className="border-border bg-card">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                        <Crown className="w-5 h-5 text-yellow-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Plan</p>
+                        <p className="font-semibold capitalize">{data.license.plan}</p>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  </CardContent>
+                </Card>
+                <Card className="border-border bg-card">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Expires</p>
+                        <p className="font-semibold">
+                          {data.license.expiresAt
+                            ? new Date(data.license.expiresAt).toLocaleDateString()
+                            : "Never (Lifetime)"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-border bg-card">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">HWID Resets</p>
+                        <div className="flex items-center gap-1">
+                          <Infinity className="w-4 h-4 text-green-500" />
+                          <span className="font-semibold text-green-500">
+                            Unlimited
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
 
-            {/* Your Key */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/5 to-transparent">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Key className="w-5 h-5 text-yellow-500" />
-                    Your Premium Key
-                  </CardTitle>
-                  <CardDescription>
-                    Keep this key safe. You&apos;ll need it to access your
-                    premium features.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 px-4 py-3 bg-muted rounded-lg font-mono text-yellow-400 overflow-x-auto">
-                      {userData?.key || "N/A"}
-                    </code>
+              {/* Your Key */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Card className="border-yellow-500/30 bg-gradient-to-r from-yellow-500/5 to-transparent">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Key className="w-5 h-5 text-yellow-500" />
+                      Your Premium Key
+                    </CardTitle>
+                    <CardDescription>
+                      Keep this key safe. You&apos;ll need it to access your
+                      premium features.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 px-4 py-3 bg-muted rounded-lg font-mono text-yellow-400 overflow-x-auto text-sm">
+                        {data.license.key}
+                      </code>
+                      <Button
+                        onClick={handleCopyKey}
+                        variant="outline"
+                        size="icon"
+                      >
+                        {copiedKey ? (
+                          <Check className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Premium Script */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Terminal className="w-5 h-5 text-accent" />
+                      Premium Script
+                    </CardTitle>
+                    <CardDescription>
+                      Copy and paste this into your executor. Enter your key when
+                      prompted.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-accent/30 to-cyan-500/30 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity" />
+                      <div className="relative bg-muted rounded-lg p-4">
+                        <code className="text-accent break-all font-mono text-sm">
+                          {premiumScript}
+                        </code>
+                      </div>
+                    </div>
                     <Button
-                      onClick={handleCopyKey}
-                      variant="outline"
-                      size="icon"
+                      onClick={handleCopyScript}
+                      className="w-full mt-4 bg-accent hover:bg-accent/90 text-accent-foreground"
                     >
-                      {copiedKey ? (
-                        <Check className="w-4 h-4 text-green-500" />
+                      {copiedScript ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Copied!
+                        </>
                       ) : (
-                        <Copy className="w-4 h-4" />
+                        <>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy Script
+                        </>
                       )}
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
 
-            {/* Premium Script */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Card className="border-accent/30 bg-gradient-to-r from-accent/5 to-transparent">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Terminal className="w-5 h-5 text-accent" />
-                    Premium Script
-                  </CardTitle>
-                  <CardDescription>
-                    Copy and paste this into your executor. Enter your key when
-                    prompted.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-accent/30 to-cyan-500/30 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                    <div className="relative bg-muted rounded-lg p-4">
-                      <code className="text-accent break-all font-mono text-sm">
-                        {premiumScript}
-                      </code>
+              {/* HWID Reset */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <Card className="border-border bg-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <RefreshCw className="w-5 h-5" />
+                      Reset HWID
+                    </CardTitle>
+                    <CardDescription>
+                      Reset your hardware ID if you&apos;ve changed devices.
+                      {isLifetime && " Unlimited resets, no cooldown!"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg mb-4">
+                      <Infinity className="w-5 h-5 text-green-500 flex-shrink-0" />
+                      <p className="text-sm text-green-400">
+                        Premium users have unlimited HWID resets with no cooldown!
+                      </p>
                     </div>
-                  </div>
-                  <Button
-                    onClick={handleCopyScript}
-                    className="w-full mt-4 bg-accent hover:bg-accent/90 text-accent-foreground"
-                  >
-                    {copiedScript ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy Script
-                      </>
+                    {error && (
+                      <div className="flex items-center gap-2 p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        {error}
+                      </div>
                     )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* HWID Reset */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <Card className="border-border bg-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <RefreshCw className="w-5 h-5" />
-                    Reset HWID
-                  </CardTitle>
-                  <CardDescription>
-                    Reset your hardware ID if you&apos;ve changed devices.
-                    {isLifetime && " Unlimited resets, no cooldown!"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg mb-4">
-                    <Infinity className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <p className="text-sm text-green-400">
-                      Premium users have unlimited HWID resets with no cooldown!
-                    </p>
-                  </div>
-                  {error && (
-                    <div className="flex items-center gap-2 p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                      {error}
-                    </div>
-                  )}
-                  <Button
-                    onClick={handleResetHWID}
-                    disabled={isResetting}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {isResetting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Resetting...
-                      </>
-                    ) : resetSuccess ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2 text-green-500" />
-                        HWID Reset Successfully!
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Reset HWID
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        )}
+                    <Button
+                      onClick={handleResetHWID}
+                      disabled={isResetting}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {isResetting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Resetting...
+                        </>
+                      ) : resetSuccess ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2 text-green-500" />
+                          HWID Reset Successfully!
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Reset HWID
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </>
+          )}
+        </div>
       </div>
     </main>
   );

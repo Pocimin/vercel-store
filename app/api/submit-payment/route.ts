@@ -17,12 +17,12 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.id;
     const formData = await request.formData();
-    const robloxUsername = formData.get("robloxUsername") as string;
+    const discord = formData.get("discord") as string;
     const plan = formData.get("plan") as string;
     const paymentMethod = formData.get("paymentMethod") as string;
     const proofFile = formData.get("proof") as File | null;
 
-    if (!robloxUsername || !plan || !paymentMethod) {
+    if (!plan || !paymentMethod) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -77,8 +77,9 @@ export async function POST(request: NextRequest) {
           inline: false,
         },
         {
-          name: "Roblox Username",
-          value: `\`${robloxUsername}\``,          inline: true,
+          name: "Discord",
+          value: discord ? `\`${discord}\`` : "Not provided",
+          inline: true,
         },
         {
           name: "Plan",
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
       
       const bytes = await proofFile.arrayBuffer();
       const blob = new Blob([bytes], { type: proofFile.type });
-      discordFormData.append("files[0]", blob, `proof_${robloxUsername}_${Date.now()}.${proofFile.name.split('.').pop()}`);
+      discordFormData.append("files[0]", blob, `proof_${Date.now()}.${proofFile.name.split('.').pop()}`);
 
       discordResponse = await fetch(DISCORD_WEBHOOK_URL, {
         method: "POST",

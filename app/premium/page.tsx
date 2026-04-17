@@ -170,7 +170,7 @@ export default function PremiumPage() {
 
     try {
       const formData = new FormData();
-      formData.append("robloxUsername", username);
+      formData.append("discord", username || "Not provided");
       formData.append("plan", selectedPlan);
       formData.append("paymentMethod", paymentMethod);
       if (proofFile) {
@@ -452,15 +452,19 @@ export default function PremiumPage() {
                   <Card className="border-border bg-card">
                     <CardContent className="p-6 space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="username">Roblox Username</Label>
+                        <Label htmlFor="discord">
+                          Discord Username <span className="text-muted-foreground">(Optional)</span>
+                        </Label>
                         <Input
-                          id="username"
-                          placeholder="Enter your Roblox username"
+                          id="discord"
+                          placeholder="e.g. username#1234 or @username"
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
                           className="bg-muted border-border"
-                          required
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Used to contact you about your payment
+                        </p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="proof">Payment Screenshot</Label>

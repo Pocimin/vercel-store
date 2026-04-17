@@ -22,7 +22,10 @@ import {
   Package,
   CreditCard,
   Clock3,
+  Gift,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -50,6 +53,99 @@ interface DashboardData {
   hasLicense: boolean;
   license?: UserLicense;
   pendingPayment?: Payment;
+}
+
+// Redeem Key Component
+function RedeemKeyCard({ onRedeem }: { onRedeem: () => void }) {
+  const [key, setKey] = useState("");
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const [redeemError, setRedeemError] = useState("");
+  const [redeemSuccess, setRedeemSuccess] = useState(false);
+
+  const handleRedeem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!key.trim()) return;
+
+    setIsRedeeming(true);
+    setRedeemError("");
+
+    try {
+      const response = await fetch("/api/redeem-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: key.trim() }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setRedeemError(result.error || "Failed to redeem key");
+        setIsRedeeming(false);
+        return;
+      }
+
+      setRedeemSuccess(true);
+      setTimeout(() => {
+        onRedeem();
+      }, 1500);
+    } catch {
+      setRedeemError("Failed to redeem key. Please try again.");
+      setIsRedeeming(false);
+    }
+  };
+
+  if (redeemSuccess) {
+    return (
+      <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
+        <Check className="w-6 h-6 text-green-500 mx-auto mb-2" />
+        <p className="text-green-400 font-medium">Key redeemed successfully!</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleRedeem} className="space-y-3">
+      <div className="space-y-2">
+        <Label htmlFor="redeem-key" className="flex items-center gap-2">
+          <Gift className="w-4 h-4" />
+          Redeem Existing Key
+        </Label>
+        <Input
+          id="redeem-key"
+          placeholder="Enter your Vonalia key"
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          className="bg-muted"
+        />
+        <p className="text-xs text-muted-foreground">
+          Already have a key? Link it to your account
+        </p>
+      </div>
+      {redeemError && (
+        <div className="p-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-sm">
+          {redeemError}
+        </div>
+      )}
+      <Button
+        type="submit"
+        disabled={isRedeeming || !key.trim()}
+        variant="outline"
+        className="w-full"
+      >
+        {isRedeeming ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Redeeming...
+          </>
+        ) : (
+          <>
+            <Gift className="w-4 h-4 mr-2" />
+            Redeem Key
+          </>
+        )}
+      </Button>
+    </form>
+  );
 }
 
 export default function DashboardPage() {
@@ -233,6 +329,15 @@ export default function DashboardPage() {
                   <Button asChild className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950">
                     <Link href="/premium">Purchase Premium</Link>
                   </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">Or</span>
+                    </div>
+                  </div>
+                  <RedeemKeyCard onRedeem={fetchDashboardData} />
                 </CardContent>
               </Card>
             </motion.div>

@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -13,14 +14,14 @@ model User {
   username      String    @unique
   password      String
   robloxUsername String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
   
   // License info
   licenseKey    String?
   licensePassword String?
   licenseType   String?   // weekly, monthly, lifetime
-  licenseExpiresAt DateTime?
+  licenseExpiresAt DateTime? @db.Timestamptz(6)
   
   // Payment tracking
   payments      Payment[]
@@ -39,9 +40,9 @@ model Payment {
   
   discordMessageId String? // Discord webhook message ID for approve/decline
   
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  processedAt   DateTime?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+  processedAt   DateTime? @db.Timestamptz(6)
   processedBy   String?   // Discord username who approved/declined
   declineReason String?
 }

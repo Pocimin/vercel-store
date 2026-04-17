@@ -29,11 +29,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!VONALIA_API_KEY) {
+      console.error("VONALIA_API_KEY is not set");
       return NextResponse.json(
-        { error: "Server configuration error" },
+        { error: "Server configuration error - Vonalia API key missing" },
         { status: 500 }
       );
     }
+    
+    console.log("Using Vonalia API key:", VONALIA_API_KEY.substring(0, 10) + "...");
 
     // Check if user already has a license
     const user = await prisma.user.findUnique({

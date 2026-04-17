@@ -50,16 +50,18 @@ export async function POST(request: NextRequest) {
     // Validate key with Vonalia
     const result = await findUser(VONALIA_API_KEY, key);
 
+    console.log("Vonalia response:", JSON.stringify(result, null, 2));
+
     if (result.Error) {
       return NextResponse.json(
-        { error: "Invalid key" },
+        { error: `Invalid key: ${result.Error}` },
         { status: 400 }
       );
     }
 
     if (!result.Info) {
       return NextResponse.json(
-        { error: "Invalid key" },
+        { error: "Key not found in Vonalia" },
         { status: 400 }
       );
     }

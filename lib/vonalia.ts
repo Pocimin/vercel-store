@@ -58,22 +58,28 @@ export async function findUser(
   apiKey: string,
   password: string
 ): Promise<VonaliaResponse> {
+  const requestBody = {
+    Key: apiKey,
+    Category: "Users",
+    Type: "Find",
+    Info: {
+      Password: password,
+    },
+  };
+  
+  console.log("Vonalia FindUser Request:", JSON.stringify(requestBody, null, 2));
+  
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      Key: apiKey,
-      Category: "Users",
-      Type: "Find",
-      Info: {
-        Password: password,
-      },
-    }),
+    body: JSON.stringify(requestBody),
   });
 
-  return response.json();
+  const result = await response.json();
+  console.log("Vonalia FindUser Response:", JSON.stringify(result, null, 2));
+  return result;
 }
 
 export async function editUser(

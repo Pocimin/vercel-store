@@ -337,7 +337,7 @@ export default function DashboardPage() {
                       <span className="bg-card px-2 text-muted-foreground">Or</span>
                     </div>
                   </div>
-                  <RedeemKeyCard onRedeem={fetchDashboardData} />
+                  <RedeemKeyCard onRedeem={() => window.location.reload()} />
                 </CardContent>
               </Card>
             </motion.div>

@@ -168,8 +168,11 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchDashboardData();
+    } else if (status === "unauthenticated") {
+      // Stop loading if not logged in
+      setIsLoadingData(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, status]);
 
   const fetchDashboardData = async () => {
     try {

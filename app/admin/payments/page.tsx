@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+export const dynamic = "force-dynamic";
+
+import { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -21,7 +23,7 @@ interface Payment {
   };
 }
 
-export default function AdminPaymentsPage() {
+function AdminPaymentsPage() {
   const searchParams = useSearchParams();
   const action = searchParams.get("action");
   const paymentId = searchParams.get("id");
@@ -260,5 +262,18 @@ export default function AdminPaymentsPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+// Wrap in Suspense to prevent prerender issues with useSearchParams
+export default function AdminPaymentsPageWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    }>
+      <AdminPaymentsPage />
+    </Suspense>
   );
 }

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
-import { findUser } from "@/lib/vonalia";
 
-const VONALIA_API_KEY = process.env.VONALIA_API_KEY;
 const SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(request: NextRequest) {
@@ -28,16 +26,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!VONALIA_API_KEY) {
-      console.error("VONALIA_API_KEY is not set");
-      return NextResponse.json(
-        { error: "Server configuration error - Vonalia API key missing" },
-        { status: 500 }
-      );
-    }
-    
-    console.log("Using Vonalia API key:", VONALIA_API_KEY.substring(0, 10) + "...");
-
     // Check if user already has a license
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -50,58 +38,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate key with Vonalia
-    const result = await findUser(VONALIA_API_KEY, key);
-
-    console.log("Vonalia response:", JSON.stringify(result, null, 2));
-
-    if (result.Error) {
-      return NextResponse.json(
-        { error: `Invalid key: ${result.Error}` },
-        { status: 400 }
-      );
-    }
-
-    if (!result.Info) {
-      return NextResponse.json(
-        { error: "Key not found in Vonalia" },
-        { status: 400 }
-      );
-    }
-
-    // Check if key is blacklisted
-    if (result.Info.Blacklist === "true") {
-      return NextResponse.json(
-        { error: "This key has been blacklisted" },
-        { status: 403 }
-      );
-    }
-
-    // Determine license type from Vonalia response
-    const licenseType = result.Info.Type?.toLowerCase() || "unknown";
-    
-    // Calculate expiration
-    const whitelistTimestamp = parseInt(result.Info.Whitelist || "0");
-    const licenseExpiresAt = whitelistTimestamp > 0 
-      ? new Date(whitelistTimestamp * 1000) 
-      : null;
+    // Store the key directly (like Discord bot does)
+    // Try to determine type from key format
+    let licenseType = "unknown";
+    if (key.toLowerCase().includes("weekly")) licenseType = "weekly";
+    else if (key.toLowerCase().includes("monthly")) licenseType = "monthly";
+    else if (key.toLowerCase().includes("lifetime")) licenseType = "lifetime";
 
     // Update user with license info
     await prisma.user.update({
       where: { id: userId },
       data: {
         licenseKey: key,
-        licensePassword: key, // Store key as password for validation
+        licensePassword: key,
         licenseType: licenseType,
-        licenseExpiresAt: licenseExpiresAt,
+        licenseExpiresAt: null, // Local keys don't have expiration tracking
       },
     });
 
     return NextResponse.json({
       success: true,
       message: "Key redeemed successfully!",
-      licenseType: result.Info.Type,
-      expiresAt: licenseExpiresAt,
+      licenseType: licenseType.toUpperCase(),
     });
   } catch (error) {
     console.error("Redeem key error:", error);

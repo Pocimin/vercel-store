@@ -1,19 +1,21 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
 
-export async function GET() {
+const SECRET = process.env.NEXTAUTH_SECRET;
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const token = await getToken({ req: request, secret: SECRET });
     
-    if (!session?.user?.id) {
+    if (!token?.sub) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
+    const userId = token.sub as string;
 
     // Get user with license info
     const user = await prisma.user.findUnique({

@@ -6,46 +6,41 @@ import { MessageCircle } from "lucide-react";
 
 export function DiscordSection() {
   return (
-    <section className="relative py-24 overflow-hidden">
-      {/* Purple/Blue gradient background like Solara */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-purple-950/20 to-black" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,92,246,0.15),transparent_70%)]" />
-      
-      <div className="relative z-10 container mx-auto px-4">
+    <section className="py-20 px-4">
+      <div className="container mx-auto max-w-4xl">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="max-w-4xl mx-auto"
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#5865F2]/20 via-[#5865F2]/10 to-transparent border border-[#5865F2]/30 p-8 md:p-12"
         >
-          <div className="relative p-12 rounded-3xl bg-gradient-to-br from-indigo-900/40 via-purple-900/40 to-indigo-900/40 border border-white/10 backdrop-blur-sm">
-            {/* Glow effect */}
-            <div className="absolute -inset-px rounded-3xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-indigo-500/20 blur-xl opacity-50" />
-            
-            <div className="relative text-center">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-indigo-200 to-white bg-clip-text text-transparent">
-                Discord
-              </h2>
-              <p className="text-lg text-white/60 mb-8">
-                Join our community for support, updates, and exclusive features.
+          {/* Background glow */}
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#5865F2]/30 rounded-full blur-[80px]" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[#5865F2]/20 rounded-full blur-[80px]" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2">Discord</h2>
+              <p className="text-muted-foreground text-lg">
+                Join our community for support, updates, and exclusive content
               </p>
-              
-              <Button
-                asChild
-                size="lg"
-                className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-6 text-lg font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-indigo-500/25"
-              >
-                <a
-                  href="https://discord.gg/q6dUF4CsKH"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageCircle className="w-5 h-5 mr-2" />
-                  Join Discord
-                </a>
-              </Button>
             </div>
+
+            <Button
+              asChild
+              size="lg"
+              className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-6 text-lg font-semibold shadow-lg shadow-[#5865F2]/25 transition-all duration-300 hover:shadow-[#5865F2]/40"
+            >
+              <a
+                href="https://discord.gg/q6dUF4CsKH"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Join Discord
+              </a>
+            </Button>
           </div>
         </motion.div>
       </div>

@@ -2,76 +2,107 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Crown, ExternalLink } from "lucide-react";
+import { Crown, Shield, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
+  const scrollToFreeScript = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const element = document.getElementById("free-script");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-black pt-20 pb-10">
-      {/* Background gradient - Purple/Blue like Solara */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(139,92,246,0.2),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(59,130,246,0.15),transparent_50%)]" />
-      
-      {/* Subtle grid */}
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,212,255,0.15),transparent_70%)]" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[128px] animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[128px] animate-pulse" />
+
+      {/* Grid Pattern */}
       <div
-        className="absolute inset-0 opacity-[0.02]"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
+          backgroundImage: `linear-gradient(rgba(0,212,255,0.3) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(0,212,255,0.3) 1px, transparent 1px)`,
+          backgroundSize: "50px 50px",
         }}
       />
 
       <div className="relative z-10 container mx-auto px-4 text-center">
-        {/* Main Heading - Solara style */}
+        {/* Badge */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-6"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/30 mb-8"
         >
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight">
-            <span className="text-white">nznt&apos;s</span>
-            <br />
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-              hub
-            </span>
-          </h1>
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          <span className="text-sm text-muted-foreground">
+            Undetected & Working
+          </span>
         </motion.div>
 
-        {/* Tagline - The first script to fully bypass the anticheat */}
+        {/* Main Heading */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 tracking-tight text-balance"
+        >
+          <span className="text-foreground">nznt&apos;s</span>
+          <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-cyan-400 to-accent drop-shadow-[0_0_30px_rgba(0,212,255,0.5)]">
+            hub
+          </span>
+        </motion.h1>
+
+        {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-xl md:text-2xl text-white/70 max-w-3xl mx-auto mb-8"
+          className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-4"
         >
-          The first script to fully bypass the anticheat.
+          The ultimate script for{" "}
+          <span className="text-accent font-semibold">Drag Drive Simulator</span>
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-sm text-muted-foreground/70 max-w-xl mx-auto mb-12"
+        >
+          First hub to fully bypass the anticheat. Earn 20-30M/hour with our
+          undetectable autofarm. 100% safe to use on main.
         </motion.p>
 
         {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
           <Button
-            asChild
+            onClick={scrollToFreeScript}
             size="lg"
-            className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold px-8 py-6 text-lg rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/25"
+            className="group relative px-8 py-6 text-lg font-bold bg-accent hover:bg-accent/90 text-accent-foreground shadow-[0_0_30px_rgba(0,212,255,0.4)] hover:shadow-[0_0_40px_rgba(0,212,255,0.6)] transition-all duration-300"
           >
-            <Link href="/dashboard">
-              <ExternalLink className="w-5 h-5 mr-2" />
-              Get Started
-            </Link>
+            <Sparkles className="w-5 h-5 mr-2" />
+            Get Free Script
           </Button>
 
           <Button
             asChild
             size="lg"
             variant="outline"
-            className="border-white/20 bg-white/5 hover:bg-white/10 text-white px-8 py-6 text-lg rounded-xl transition-all duration-300"
+            className="group px-8 py-6 text-lg font-bold border-2 border-yellow-500/50 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 hover:text-yellow-300 hover:border-yellow-400 transition-all duration-300"
           >
             <Link href="/premium">
               <Crown className="w-5 h-5 mr-2" />
@@ -80,26 +111,40 @@ export function HeroSection() {
           </Button>
         </motion.div>
 
-        {/* Rounded image container like Solara */}
+        {/* Already Have Key Link */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
-          className="relative max-w-5xl mx-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.45 }}
+          className="mt-4"
         >
-          <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-1">
-            <div className="relative rounded-xl overflow-hidden bg-black/50 aspect-[16/9] flex items-center justify-center">
-              {/* Placeholder for the UI mockup - replace with actual image */}
-              <div className="text-center p-8">
-                <div className="text-6xl mb-4">🎮</div>
-                <p className="text-white/60 text-lg">Dashboard Preview</p>
-                <p className="text-white/40 text-sm">Replace with actual screenshot</p>
-              </div>
-            </div>
+          <Link
+            href="/dashboard"
+            className="text-sm text-muted-foreground hover:text-accent transition-colors"
+          >
+            Already have a key? <span className="underline">Redeem it on Dashboard</span>
+          </Link>
+        </motion.div>
+
+        {/* Trust Indicators */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="mt-16 flex flex-wrap justify-center gap-8 text-muted-foreground/60"
+        >
+          <div className="flex items-center gap-2">
+            <Shield className="w-4 h-4 text-green-500" />
+            <span className="text-sm">Anticheat Bypass</span>
           </div>
-          
-          {/* Glow effect behind the image */}
-          <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-2xl opacity-50 -z-10" />
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-yellow-500" />
+            <span className="text-sm">20-30M/Hour</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-accent" />
+            <span className="text-sm">100% Undetected</span>
+          </div>
         </motion.div>
       </div>
     </section>

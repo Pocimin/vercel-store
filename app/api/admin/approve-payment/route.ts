@@ -71,8 +71,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (keyData.Error || !keyData.Info?.Info?.Password) {
+      console.log("Vonalia create key error:", JSON.stringify(keyData, null, 2));
       return NextResponse.json(
-        { error: "Failed to create license key" },
+        { error: `Failed to create license key: ${keyData.Error || "Missing password in response"}` },
         { status: 500 }
       );
     }

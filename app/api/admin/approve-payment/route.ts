@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       whitelistTimestamp
     );
 
-    if (keyData.Error || !keyData.Info?.Info?.Password) {
+    if (keyData.Error || !keyData.Info?.Password) {
       console.log("Vonalia create key error:", JSON.stringify(keyData, null, 2));
       return NextResponse.json(
         { error: `Failed to create license key: ${keyData.Error || "Missing password in response"}` },
@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const licenseKey = keyData.Info.Info.Key || "";
-    const licensePassword = keyData.Info.Info.Password;
+    const licenseKey = keyData.Info?.Key || "";
+    const licensePassword = keyData.Info?.Password;
 
     // Calculate expiration
     const expiresAt = payment.plan === "lifetime" 

@@ -57,6 +57,8 @@ function AdminPaymentsPage() {
       }
     } catch (e) {
       setError("Failed to load payments");
+    } finally {
+      setLoading(false);
     }
   };
 

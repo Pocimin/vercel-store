@@ -183,12 +183,13 @@ export default function PremiumPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to submit payment");
+        const data = await response.json();
+        throw new Error(data.error || "Failed to submit payment");
       }
 
       setSubmitted(true);
-    } catch {
-      setError("Failed to submit payment. Please try again or contact support.");
+    } catch (err: any) {
+      setError(err.message || "Failed to submit payment. Please try again or contact support.");
     } finally {
       setIsSubmitting(false);
     }

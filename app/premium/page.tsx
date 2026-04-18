@@ -157,7 +157,7 @@ export default function PremiumPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPlan || !paymentMethod || !username) return;
+    if (!selectedPlan || !paymentMethod) return;
 
     // For robux, proof is optional since they buy gamepass
     if (paymentMethod !== "robux" && !proofFile) {

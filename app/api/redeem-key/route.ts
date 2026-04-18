@@ -26,6 +26,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate key format: KEY_ followed by 128 hex characters
+    const keyRegex = /^KEY_[a-fA-F0-9]{128}$/;
+    if (!keyRegex.test(key)) {
+      return NextResponse.json(
+        { error: "Invalid key format. Key must start with KEY_ followed by 128 hexadecimal characters." },
+        { status: 400 }
+      );
+    }
+
     // Check if user already has a license
     const user = await prisma.user.findUnique({
       where: { id: userId },

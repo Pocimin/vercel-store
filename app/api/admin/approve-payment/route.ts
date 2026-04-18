@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
 import { createUser, getWhitelistTimestamp } from "@/lib/vonalia";
 
 const VONALIA_API_KEY = process.env.VONALIA_API_KEY;
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
-
-// Admin API key for authentication
-const ADMIN_API_KEY = process.env.ADMIN_API_KEY || "your-admin-secret-key";
+const SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin authentication
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${ADMIN_API_KEY}`) {
+    // Verify admin authentication via JWT
+    const token = await getToken({ req: request, secret: SECRET });
+    
+    if (!token?.sub) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }

@@ -17,6 +17,7 @@ interface Payment {
   status: string;
   createdAt: string;
   discordMessageId?: string;
+  paymentProofUrl?: string;
   user: {
     username: string;
     email: string;
@@ -170,25 +171,26 @@ function AdminPaymentsPage() {
                   {pendingPayments.map((payment) => (
                     <div
                       key={payment.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-card/50"
+                      className="p-4 rounded-lg border border-border/50 bg-card/50"
                     >
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold capitalize">
-                            {payment.plan}
-                          </span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            {payment.paymentMethod.toUpperCase()}
-                          </span>
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold capitalize">
+                              {payment.plan}
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                              {payment.paymentMethod.toUpperCase()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {payment.user?.email || "Unknown user"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            ID: {payment.id}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {payment.user?.email || "Unknown user"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          ID: {payment.id}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                         <Button
                           size="sm"
                           variant="outline"
@@ -219,7 +221,18 @@ function AdminPaymentsPage() {
                         </Button>
                       </div>
                     </div>
-                  ))}
+                    {payment.paymentProofUrl && (
+                      <div className="mt-4">
+                        <p className="text-sm text-muted-foreground mb-2">Payment Proof:</p>
+                        <img
+                          src={payment.paymentProofUrl}
+                          alt="Payment proof"
+                          className="max-w-full h-auto max-h-64 rounded-lg border border-border/50"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
                 </div>
               )}
             </CardContent>

@@ -512,7 +512,7 @@ export default function PremiumPage() {
                       >
                         <Button
                           type="submit"
-                          disabled={!username || isSubmitting}
+                          disabled={isSubmitting}
                           className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-950 font-bold"
                         >
                           {isSubmitting

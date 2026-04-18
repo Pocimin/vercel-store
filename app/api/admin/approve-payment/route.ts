@@ -59,15 +59,23 @@ export async function POST(request: NextRequest) {
     const duration = payment.plan === "weekly" ? 7 * 86400 : 
                      payment.plan === "monthly" ? 30 * 86400 : 0;
     
-    const whitelistTimestamp = getWhitelistTimestamp(
-      payment.plan === "lifetime" ? "Lifetime" : 
-      payment.plan === "weekly" ? "Weekly" : "Monthly"
-    );
+    // For lifetime, use 8000000000 unix timestamp
+    const whitelistTimestamp = payment.plan === "lifetime" 
+      ? 8000000000 
+      : Math.floor(Date.now() / 1000) + duration;
+
+    // Use lowercase types as requested
+    const vonaliaType = payment.plan === "lifetime" ? "lifetime" : 
+                        payment.plan === "weekly" ? "weekly" : "monthly";
+    
+    // Add discord username to notes if provided
+    const note = payment.discordUsername || undefined;
 
     const keyData = await createUser(
       VONALIA_API_KEY,
-      payment.plan === "lifetime" ? "Lifetime" : payment.plan === "weekly" ? "Weekly" : "Monthly",
-      whitelistTimestamp
+      vonaliaType as "Free" | "Weekly" | "Monthly" | "Lifetime",
+      whitelistTimestamp,
+      note
     );
 
     if (keyData.Error || !keyData.Info?.Password) {

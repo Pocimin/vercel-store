@@ -33,22 +33,29 @@ interface CreateUserResponse {
 export async function createUser(
   apiKey: string,
   type: "Free" | "Weekly" | "Monthly" | "Lifetime",
-  whitelistTimestamp: number
+  whitelistTimestamp: number,
+  note?: string
 ): Promise<CreateUserResponse> {
+  const requestBody: any = {
+    Key: apiKey,
+    Category: "Users",
+    Type: "Create",
+    Info: {
+      Type: type,
+      Whitelist: whitelistTimestamp.toString(),
+    },
+  };
+  
+  if (note) {
+    requestBody.Info.Note = note;
+  }
+  
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      Key: apiKey,
-      Category: "Users",
-      Type: "Create",
-      Info: {
-        Type: type,
-        Whitelist: whitelistTimestamp.toString(),
-      },
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   return response.json();

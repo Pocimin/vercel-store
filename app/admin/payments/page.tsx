@@ -24,12 +24,23 @@ interface Payment {
   };
 }
 
+interface User {
+  id: string;
+  username: string;
+  email: string;
+  licenseKey: string | null;
+  licenseType: string | null;
+  licenseExpiresAt: string | null;
+  createdAt: string;
+}
+
 function AdminPaymentsPage() {
   const searchParams = useSearchParams();
   const action = searchParams.get("action");
   const paymentId = searchParams.get("id");
   
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -46,13 +57,24 @@ function AdminPaymentsPage() {
       }
     } catch (e) {
       setError("Failed to load payments");
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("/api/admin/users");
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users);
+      }
+    } catch (e) {
+      console.error("Failed to load users", e);
     }
   };
 
   useEffect(() => {
     fetchPayments();
+    fetchUsers();
   }, []);
 
   // Handle URL action (approve/decline from webhook buttons)
@@ -237,6 +259,52 @@ function AdminPaymentsPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Active Users Section */}
+          {users.length > 0 && (
+            <Card className="border-border/50 mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-accent">
+                  <span className="w-2 h-2 rounded-full bg-accent" />
+                  Active Users with Licenses ({users.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {users.map((user) => (
+                    <div
+                      key={user.id}
+                      className="p-3 rounded-lg border border-border/30 text-sm"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-semibold">{user.username}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs capitalize ${
+                          user.licenseType === "lifetime"
+                            ? "bg-purple-500/10 text-purple-500"
+                            : user.licenseType === "monthly"
+                            ? "bg-blue-500/10 text-blue-500"
+                            : "bg-green-500/10 text-green-500"
+                        }`}>
+                          {user.licenseType || "unknown"}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-xs">{user.email}</p>
+                      {user.licenseKey && (
+                        <p className="text-muted-foreground text-xs mt-1 font-mono">
+                          Key: {user.licenseKey.substring(0, 20)}...
+                        </p>
+                      )}
+                      {user.licenseExpiresAt && (
+                        <p className="text-muted-foreground text-xs mt-1">
+                          Expires: {new Date(user.licenseExpiresAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {payments.length > pendingPayments.length && (
             <Card className="border-border/50 mt-6">

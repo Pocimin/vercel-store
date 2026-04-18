@@ -1,13 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { prisma } from "@/lib/db";
 import { editUser } from "@/lib/vonalia";
+
+const SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(request: NextRequest) {
   try {
-    const { key } = await request.json();
-
-    if (!key) {
+    const token = await getToken({ req: request, secret: SECRET });
+    
+    if (!token?.sub) {
       return NextResponse.json(
-        { error: "Key is required" },
+        { error: "You must be logged in" },
+        { status: 401 }
+      );
+    }
+
+    const userId = token.sub as string;
+
+    // Get user's license info from database
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { licenseKey: true, licensePassword: true },
+    });
+
+    if (!user?.licenseKey) {
+      return NextResponse.json(
+        { error: "No license found for your account" },
         { status: 400 }
       );
     }
@@ -22,13 +41,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Reset HWID by setting Hardware to empty string
-    const result = await editUser(vonaliaApiKey, key, {
+    // Use stored password (or key as fallback for old redemptions)
+    const password = user.licensePassword || user.licenseKey;
+    const result = await editUser(vonaliaApiKey, password, {
       Hardware: "",
     });
 
     if (result.Error) {
+      console.log("HWID reset Vonalia error:", result.Error);
       return NextResponse.json(
-        { error: result.Error },
+        { error: `Failed to reset HWID: ${result.Error}` },
         { status: 400 }
       );
     }

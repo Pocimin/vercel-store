@@ -211,7 +211,6 @@ export default function DashboardPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ key: data.license.key }),
       });
 
       const result = await response.json();

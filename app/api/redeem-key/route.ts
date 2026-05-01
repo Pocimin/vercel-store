@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 const SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 key redemptions per hour per IP
+  const rateLimitResponse = await applyRateLimit(request, 5, 60 * 60 * 1000)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const token = await getToken({ req: request, secret: SECRET });
     

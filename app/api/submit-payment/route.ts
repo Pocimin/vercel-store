@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
+import { applyRateLimit } from "@/lib/rate-limit";
 
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || "https://discord.com/api/webhooks/1494551497709715456/8tvju5XyGi_67EkC3Dg8uKqMyZGyPi_Du1AZ6jb5gWYuT9r18hgUL3r0jIKoMswf82Sl";
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 const SECRET = process.env.NEXTAUTH_SECRET;
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 3 payment submissions per hour per IP
+  const rateLimitResponse = await applyRateLimit(request, 3, 60 * 60 * 1000)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     // Check authentication
     const token = await getToken({ req: request, secret: SECRET });
@@ -13,6 +18,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "You must be logged in to make a payment" },
         { status: 401 }
+      );
+    }
+
+    if (!DISCORD_WEBHOOK_URL) {
+      return NextResponse.json(
+        { error: "Payment system is not configured" },
+        { status: 500 }
       );
     }
 
@@ -26,6 +38,33 @@ export async function POST(request: NextRequest) {
     if (!plan || !paymentMethod) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Validate plan and payment method
+    const validPlans = ["weekly", "monthly", "lifetime"];
+    const validPaymentMethods = ["qris", "paypal", "robux"];
+    
+    if (!validPlans.includes(plan) || !validPaymentMethods.includes(paymentMethod)) {
+      return NextResponse.json(
+        { error: "Invalid plan or payment method" },
+        { status: 400 }
+      );
+    }
+
+    // Validate file size (max 10MB)
+    if (proofFile && proofFile.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "File size must be less than 10MB" },
+        { status: 400 }
+      );
+    }
+
+    // Validate file type
+    if (proofFile && !proofFile.type.startsWith("image/")) {
+      return NextResponse.json(
+        { error: "Only image files are allowed" },
         { status: 400 }
       );
     }

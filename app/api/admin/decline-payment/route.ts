@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
+import { applyRateLimit } from "@/lib/rate-limit";
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 const SECRET = process.env.NEXTAUTH_SECRET;
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 30 declines per minute per IP (admin operations)
+  const rateLimitResponse = await applyRateLimit(request, 30, 60 * 1000)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
-    // Verify admin authentication via JWT
+    // Verify admin authentication via JWT OR admin API key
     const token = await getToken({ req: request, secret: SECRET });
+    const apiKey = request.headers.get("x-admin-api-key");
     
-    if (!token?.sub) {
+    if (!token?.sub && (!apiKey || apiKey !== ADMIN_API_KEY)) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - Admin access required" },
         { status: 401 }
       );
     }

@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 import { PageTransition } from "@/components/page-transition";
 import { AuthProvider } from "@/components/session-provider";
 
@@ -43,11 +41,7 @@ export default function RootLayout({
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased min-h-screen flex flex-col">
         <AuthProvider>
-          <Header />
-          <main className="flex-1">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
+          <PageTransition>{children}</PageTransition>
           {process.env.NODE_ENV === "production" && <Analytics />}
         </AuthProvider>
       </body>

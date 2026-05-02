@@ -37,6 +37,10 @@
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.28 0.02 260);
   --sidebar-ring: oklch(0.85 0.18 180);
+  
+  /* Custom variables for sunshine theme */
+  --primary-glow: 180 100% 70%;
+  --shadow-button: 0 4px 20px hsl(180 100% 70% / 0.3), 0 2px 6px hsl(180 100% 60% / 0.2);
 }
 
 @theme inline {
@@ -114,4 +118,92 @@
 
 .text-glow {
   text-shadow: 0 0 10px oklch(0.85 0.18 180 / 0.6), 0 0 20px oklch(0.85 0.18 180 / 0.4);
+}
+
+/* Text gradients */
+.text-gradient {
+  background: linear-gradient(to right, oklch(0.98 0 0), oklch(0.85 0.18 180));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(to right, oklch(0.7 0.2 300), oklch(0.85 0.18 180));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Beam border effect for images */
+.beam-border {
+  position: relative;
+  border-radius: 1rem;
+  background: linear-gradient(var(--angle, 0deg), 
+    hsl(265 85% 55% / 0.6) 0%, 
+    transparent 30%,
+    transparent 70%,
+    hsl(265 85% 55% / 0.6) 100%
+  );
+  padding: 1px;
+  animation: beam-rotate 4s linear infinite;
+}
+
+.beam-border-strong {
+  animation: beam-rotate 3s linear infinite;
+}
+
+.beam-inner {
+  position: relative;
+  border-radius: calc(1rem - 1px);
+  background: oklch(0.16 0.02 260);
+  overflow: hidden;
+}
+
+@keyframes beam-rotate {
+  0% { --angle: 0deg; }
+  100% { --angle: 360deg; }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Animations */
+@keyframes glow {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-glow {
+  animation: glow 4s ease-in-out infinite;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
 }

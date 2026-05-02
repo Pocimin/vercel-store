@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Check, Lock, Crown, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -26,10 +27,32 @@ const premiumFeatures = [
   "Priority Updates",
 ];
 
-export const Compare = () => (
-  <section id="features" className="relative py-28">
+export const Compare = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+  <section ref={sectionRef} id="features" className="relative py-28">
     <div className="container">
-      <div className="mx-auto max-w-2xl text-center">
+      <div className={`mx-auto max-w-2xl text-center transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <h2 className="text-4xl md:text-6xl font-semibold tracking-tight">
           Compare <span className="text-gradient-purple">Free</span>{" "}vs{" "}
           <span className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
@@ -39,7 +62,7 @@ export const Compare = () => (
         <p className="mt-4 text-muted-foreground">Choose the plan that fits your needs</p>
       </div>
 
-      <div className="mt-14 grid gap-6 md:grid-cols-2 max-w-5xl mx-auto">
+      <div className={`mt-14 grid gap-6 md:grid-cols-2 max-w-3xl mx-auto transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         {/* FREE */}
         <div className="rounded-2xl border border-border/80 bg-card/40 p-7">
           <div className="flex items-center gap-4">
@@ -112,4 +135,5 @@ export const Compare = () => (
       </div>
     </div>
   </section>
-);
+  );
+};

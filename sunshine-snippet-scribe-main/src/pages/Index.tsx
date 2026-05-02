@@ -5,7 +5,7 @@ import { FreeScript } from "@/components/FreeScript";
 import { FAQ } from "@/components/FAQ";
 import { CTAFooter } from "@/components/CTAFooter";
 
-export default function Home() {
+const Index = () => {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Navbar />
@@ -16,4 +16,6 @@ export default function Home() {
       <CTAFooter />
     </main>
   );
-}
+};
+
+export default Index;

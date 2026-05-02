@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: "nznt's hub | DDS Script",
   description:
     "The best Drag Drive Simulator script hub. Undetectable autofarm, fast earnings 20-30M/hour, and premium features.",
-  generator: "v0.app",
+  generator: "nznt's hub",
   icons: {
     icon: [
       {

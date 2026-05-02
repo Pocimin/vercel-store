@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3%;
+    --foreground: 0 0% 96%;
+
+    --card: 240 8% 6%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 240 8% 6%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 265 85% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 280 90% 72%;
+
+    --secondary: 240 6% 10%;
+    --secondary-foreground: 0 0% 96%;
+
+    --muted: 240 6% 9%;
+    --muted-foreground: 240 5% 60%;
+
+    --accent: 265 85% 65%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 6% 13%;
+    --input: 240 6% 13%;
+    --ring: 265 85% 65%;
+
+    --radius: 0.875rem;
+
+    --gradient-text: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 70%) 100%);
+    --gradient-purple: linear-gradient(135deg, hsl(265 85% 65%), hsl(285 90% 70%));
+    --shadow-button: 0 8px 24px -6px hsl(265 85% 65% / 0.5);
+    --shadow-card: 0 24px 60px -20px hsl(0 0% 0% / 0.6);
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "cv11";
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, hsl(265 85% 30% / 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 110%, hsl(265 85% 30% / 0.12), transparent 60%);
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-purple {
+    background: var(--gradient-purple);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .ring-glow {
+    box-shadow: 0 0 0 1px hsl(var(--border)), 0 30px 80px -30px hsl(265 85% 50% / 0.45);
+  }
+  /* Traveling-beam border (Solara-like). Wrap content in .beam-border > .beam-inner */
+  .beam-border {
+    position: relative;
+    border-radius: 1.25rem;
+    padding: 1px;
+    background: hsl(var(--border));
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .beam-border::before {
+    content: "";
+    position: absolute;
+    inset: -150%;
+    z-index: 0;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      hsl(var(--primary-glow)) 40deg,
+      hsl(var(--primary)) 80deg,
+      transparent 140deg,
+      transparent 360deg
+    );
+    animation: beam-spin 5s linear infinite;
+    will-change: transform;
+  }
+  .beam-border > .beam-inner {
+    position: relative;
+    z-index: 1;
+    border-radius: calc(1.25rem - 1px);
+    background: hsl(var(--card));
+    overflow: hidden;
+  }
+  .beam-border-strong::before {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      hsl(var(--primary-glow)) 30deg,
+      hsl(280 95% 75%) 70deg,
+      hsl(var(--primary)) 110deg,
+      transparent 170deg,
+      transparent 360deg
+    );
+    animation-duration: 4s;
+  }
+  /* GPU-friendly noise via tiny svg, low-cost */
+  .grain::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");
+    opacity: 0.04; pointer-events: none; mix-blend-mode: overlay;
+  }
+}
+
+/* Smooth, GPU-only animations — no layout thrash, no backdrop-blur on animated layers */
+@keyframes fade-up {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.85; }
+}
+@keyframes beam-spin {
+  to { transform: rotate(1turn); }
+}
+.animate-fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+.animate-glow {
+  animation: glow-pulse 6s ease-in-out infinite;
+  will-change: opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up, .animate-glow { animation: none !important; }
+}

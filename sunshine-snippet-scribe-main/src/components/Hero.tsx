@@ -1,0 +1,112 @@
+import uiFree from "@/assets/ui-free.png";
+import uiPremium from "@/assets/ui-premium.png";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { Link } from "react-router-dom";
+
+export const Hero = () => (
+  <section className="relative overflow-hidden pt-36 pb-28">
+    <div
+      aria-hidden
+      className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[700px] w-[1100px] -translate-x-1/2 animate-glow"
+      style={{
+        background:
+          "radial-gradient(ellipse at center, hsl(265 85% 55% / 0.35), transparent 60%)",
+      }}
+    />
+
+    <div className="container relative">
+      <div className="mx-auto max-w-3xl text-center animate-fade-up">
+        <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-[1.02] text-gradient">
+          The #1 DDS Script
+          <br />
+          for <span className="text-gradient-purple">Roblox</span>.
+        </h1>
+        <p className="mx-auto mt-6 max-w-xl text-base md:text-lg text-muted-foreground">
+          First hub to fully bypass the anticheat. Earn 20-30M/hour with our
+          undetectable autofarm. 100% safe to use on main.
+        </p>
+
+        <div
+          className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-up"
+          style={{ animationDelay: "120ms" }}
+        >
+          <Button variant="hero" size="lg" className="min-w-[180px]" asChild>
+            <a href="#free-script">
+              <Download className="h-4 w-4" />
+              Get Free Script
+            </a>
+          </Button>
+          <Button variant="ghostMuted" size="lg" className="min-w-[180px]" asChild>
+            <Link to="/premium">View Premium</Link>
+          </Button>
+        </div>
+      </div>
+
+      <div
+        id="scripts"
+        className="relative mt-20 mx-auto max-w-6xl animate-fade-up"
+        style={{ animationDelay: "200ms" }}
+      >
+        <div className="grid gap-8 md:grid-cols-2">
+          <ProductCard
+            label="Free"
+            badgeClass="bg-secondary text-foreground"
+            src={uiFree}
+            alt="nznt's hub — Free UI"
+          />
+          <ProductCard
+            label="Premium"
+            badgeClass="bg-gradient-to-r from-primary to-[hsl(var(--primary-glow))] text-primary-foreground"
+            src={uiPremium}
+            alt="nznt's hub — Premium UI"
+            highlighted
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+const ProductCard = ({
+  label,
+  badgeClass,
+  src,
+  alt,
+  highlighted,
+}: {
+  label: string;
+  badgeClass: string;
+  src: string;
+  alt: string;
+  highlighted?: boolean;
+}) => (
+  <div className="group relative">
+    {highlighted && (
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] opacity-60 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, hsl(265 85% 55% / 0.55), transparent 70%)",
+        }}
+      />
+    )}
+    <div className={`beam-border ${highlighted ? "beam-border-strong" : ""}`}>
+      <div className="beam-inner p-2">
+        <div className="absolute left-4 top-4 z-10">
+          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>
+            {label}
+          </span>
+        </div>
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          decoding="async"
+          className="w-full h-auto rounded-xl"
+        />
+      </div>
+    </div>
+  </div>
+);

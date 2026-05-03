@@ -35,7 +35,7 @@ export const CTAFooter = () => {
           "radial-gradient(ellipse at center, hsl(265 85% 55% / 0.25), transparent 65%)",
       }}
     />
-    <div className="container py-24 text-center px-4">
+    <div className="container mx-auto py-24 text-center px-4">
       <div className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <h2 className="text-4xl md:text-6xl font-semibold tracking-tight text-gradient">
           Ready to ship your run?

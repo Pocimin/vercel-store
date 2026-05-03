@@ -16,7 +16,7 @@ export const Hero = () => (
       }}
     />
 
-    <div className="container relative">
+    <div className="container mx-auto px-4 relative">
       <div className="mx-auto max-w-3xl text-center animate-fade-up">
         <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-[1.02] text-gradient">
           The #1 DDS Script

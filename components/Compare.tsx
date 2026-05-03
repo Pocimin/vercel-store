@@ -51,7 +51,7 @@ export const Compare = () => {
 
   return (
   <section ref={sectionRef} id="features" className="relative py-28">
-    <div className="container">
+    <div className="container mx-auto px-4">
       <div className={`mx-auto max-w-2xl text-center transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <h2 className="text-4xl md:text-6xl font-semibold tracking-tight">
           Compare <span className="text-gradient-purple">Free</span>{" "}vs{" "}

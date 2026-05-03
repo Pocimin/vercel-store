@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const faqs = [
@@ -9,16 +10,38 @@ const faqs = [
   { q: "Where can I get help?", a: "Join the Discord — that's where updates drop and where the team and community help out fastest." },
 ];
 
-export const FAQ = () => (
-  <section id="faq" className="relative py-28">
-    <div className="container max-w-3xl">
-      <div className="text-center">
+export const FAQ = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+  <section ref={sectionRef} id="faq" className="relative py-28">
+    <div className="container max-w-3xl mx-auto px-4">
+      <div className={`text-center transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">FAQ</p>
         <h2 className="mt-3 text-4xl md:text-5xl font-semibold tracking-tight text-gradient">
           Questions, answered.
         </h2>
       </div>
-      <Accordion type="single" collapsible className="mt-12 space-y-2">
+      <Accordion type="single" collapsible className={`mt-12 space-y-2 transition-all duration-700 delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         {faqs.map((f, i) => (
           <AccordionItem
             key={i}
@@ -34,4 +57,5 @@ export const FAQ = () => (
       </Accordion>
     </div>
   </section>
-);
+  );
+};

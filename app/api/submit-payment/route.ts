@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
         plan,
         paymentMethod,
         status: "pending",
+        discordUsername: discord || null,
       },
     });
 
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
       const discordFormData = new FormData();
       
       const payload = {
-        content: `**New Payment Request** from \`${user.username}\``,
+        content: `<@&1256664627115331668> **New Payment Request** from \`${user.username}\``,
         embeds: [embed],
         components: [
           {
@@ -217,7 +218,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       const payload = {
-        content: `**New Payment Request** from \`${user.username}\``,
+        content: `<@&1256664627115331668> **New Payment Request** from \`${user.username}\``,
         embeds: [embed],
         components: [
           {

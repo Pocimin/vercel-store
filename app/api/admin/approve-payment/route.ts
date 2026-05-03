@@ -75,8 +75,11 @@ export async function POST(request: NextRequest) {
     const vonaliaType = payment.plan === "lifetime" ? "lifetime" : 
                         payment.plan === "weekly" ? "weekly" : "monthly";
     
-    // Add discord username to notes if provided
-    const note = payment.discordUsername || undefined;
+    // Format note as web_(discord) or web_(random string)
+    const randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const note = payment.discordUsername 
+      ? `web_${payment.discordUsername}` 
+      : `web_${randomId}`;
 
     const keyData = await createUser(
       VONALIA_API_KEY,

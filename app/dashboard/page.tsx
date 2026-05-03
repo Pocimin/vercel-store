@@ -23,6 +23,9 @@ import {
   CreditCard,
   Clock3,
   Gift,
+  Search,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -40,6 +43,8 @@ interface UserLicense {
   key: string;
   plan: string;
   expiresAt: string | null;
+  lastVerified: string | null;
+  status: string;
 }
 
 interface Payment {
@@ -53,6 +58,7 @@ interface DashboardData {
   hasLicense: boolean;
   license?: UserLicense;
   pendingPayment?: Payment;
+  needsVerification?: boolean;
 }
 
 // Redeem Key Component
@@ -158,6 +164,8 @@ export default function DashboardPage() {
   const [copiedScript, setCopiedScript] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -230,6 +238,51 @@ export default function DashboardPage() {
       setError("Failed to reset HWID. Please try again.");
     } finally {
       setIsResetting(false);
+    }
+  };
+
+  const handleCheckKeyStatus = async () => {
+    if (!data?.license?.key) return;
+
+    setIsCheckingStatus(true);
+    setStatusMessage("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/verify-key", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || "Failed to check key status");
+        setIsCheckingStatus(false);
+        return;
+      }
+
+      // Refresh dashboard data to show updated status
+      await fetchDashboardData();
+
+      // Show status message
+      if (result.keyStatus === "active") {
+        setStatusMessage("✅ Key is active and valid!");
+      } else if (result.keyStatus === "expired") {
+        setStatusMessage("⚠️ Key has expired. Please purchase a new license.");
+      } else if (result.keyStatus === "invalid") {
+        setStatusMessage("❌ Key is invalid or not found in Vonalia. Please contact support.");
+      } else {
+        setStatusMessage(`Key status: ${result.keyStatus}`);
+      }
+
+      setTimeout(() => setStatusMessage(""), 5000);
+    } catch {
+      setError("Failed to check key status. Please try again.");
+    } finally {
+      setIsCheckingStatus(false);
     }
   };
 
@@ -399,7 +452,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="grid md:grid-cols-3 gap-4"
+                className="grid md:grid-cols-2 gap-4"
               >
                 <Card className="border-border bg-card">
                   <CardContent className="p-4">
@@ -431,22 +484,98 @@ export default function DashboardPage() {
                     </div>
                   </CardContent>
                 </Card>
+              </motion.div>
+
+              {/* Key Status Card with Check Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+              >
                 <Card className="border-border bg-card">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-green-500" />
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      Key Status
+                    </CardTitle>
+                    <CardDescription>
+                      Check if your key is valid and active in Vonalia
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        data.license.status === "active" 
+                          ? "bg-green-500/20" 
+                          : data.license.status === "expired"
+                          ? "bg-yellow-500/20"
+                          : data.license.status === "invalid"
+                          ? "bg-red-500/20"
+                          : "bg-muted"
+                      }`}>
+                        {data.license.status === "active" ? (
+                          <Check className="w-5 h-5 text-green-500" />
+                        ) : data.license.status === "expired" ? (
+                          <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                        ) : data.license.status === "invalid" ? (
+                          <XCircle className="w-5 h-5 text-red-500" />
+                        ) : (
+                          <Search className="w-5 h-5 text-muted-foreground" />
+                        )}
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">HWID Resets</p>
-                        <div className="flex items-center gap-1">
-                          <Infinity className="w-4 h-4 text-green-500" />
-                          <span className="font-semibold text-green-500">
-                            Unlimited
-                          </span>
-                        </div>
+                        <p className="text-sm text-muted-foreground">Current Status</p>
+                        <p className={`font-semibold capitalize ${
+                          data.license.status === "active" 
+                            ? "text-green-500" 
+                            : data.license.status === "expired"
+                            ? "text-yellow-500"
+                            : data.license.status === "invalid"
+                            ? "text-red-500"
+                            : ""
+                        }`}>
+                          {data.license.status || "Unknown"}
+                        </p>
                       </div>
+                      {data.license.lastVerified && (
+                        <div className="ml-auto text-xs text-muted-foreground">
+                          Last checked: {new Date(data.license.lastVerified).toLocaleString()}
+                        </div>
+                      )}
                     </div>
+                    
+                    {statusMessage && (
+                      <div className={`p-3 mb-4 rounded-lg text-sm ${
+                        statusMessage.includes("✅") 
+                          ? "bg-green-500/10 border border-green-500/30 text-green-400"
+                          : statusMessage.includes("⚠️")
+                          ? "bg-yellow-500/10 border border-yellow-500/30 text-yellow-400"
+                          : statusMessage.includes("❌")
+                          ? "bg-red-500/10 border border-red-500/30 text-red-400"
+                          : "bg-muted"
+                      }`}>
+                        {statusMessage}
+                      </div>
+                    )}
+                    
+                    <Button
+                      onClick={handleCheckKeyStatus}
+                      disabled={isCheckingStatus}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {isCheckingStatus ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Checking...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="w-4 h-4 mr-2" />
+                          Check Key Status
+                        </>
+                      )}
+                    </Button>
                   </CardContent>
                 </Card>
               </motion.div>

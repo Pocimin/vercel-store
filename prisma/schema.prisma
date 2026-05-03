@@ -40,6 +40,7 @@ model Payment {
   status        String    @default("pending") // pending, approved, declined
   
   proofUrl      String?   // URL to payment proof image
+  discordUsername String? // Discord username for note
   
   discordMessageId String? // Discord webhook message ID for approve/decline
   

@@ -92,6 +92,7 @@ export async function findUser(
 export async function editUser(
   apiKey: string,
   password: string,
+  userKey: string,
   updates: Partial<{
     Hardware: string;
     Type: string;
@@ -116,6 +117,7 @@ export async function editUser(
       Category: "Users",
       Type: "Edit",
       Info: {
+        Key: userKey,
         Password: password,
         ...updates,
       },

@@ -22,8 +22,11 @@ export async function GET(request: NextRequest) {
       where: { id: userId },
       select: {
         licenseKey: true,
+        licensePassword: true,
         licenseType: true,
         licenseExpiresAt: true,
+        lastKeyVerified: true,
+        keyStatus: true,
       },
     });
 
@@ -43,14 +46,22 @@ export async function GET(request: NextRequest) {
 
     const hasLicense = !!user?.licenseKey;
 
+    // Check if key needs verification (older than 30 mins)
+    const needsVerification = user?.lastKeyVerified 
+      ? Date.now() - new Date(user.lastKeyVerified).getTime() > 30 * 60 * 1000 
+      : true;
+
     return NextResponse.json({
       hasLicense,
       license: hasLicense ? {
         key: user?.licenseKey,
         plan: user?.licenseType,
         expiresAt: user?.licenseExpiresAt,
+        lastVerified: user?.lastKeyVerified,
+        status: user?.keyStatus || "unknown",
       } : undefined,
       pendingPayment: pendingPayment || undefined,
+      needsVerification,
     });
   } catch (error) {
     console.error("Dashboard API error:", error);

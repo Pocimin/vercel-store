@@ -22,6 +22,10 @@ model User {
   licenseType   String?   // weekly, monthly, lifetime
   licenseExpiresAt DateTime? @db.Timestamptz(6)
   
+  // Key verification tracking
+  lastKeyVerified DateTime? @db.Timestamptz(6)
+  keyStatus     String?   // active, expired, invalid, unknown
+  
   // Payment tracking
   payments      Payment[]
 }

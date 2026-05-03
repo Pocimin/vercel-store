@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
     // Reset HWID by setting Hardware to empty string
     // Use stored password (or key as fallback for old redemptions)
     const password = user.licensePassword || user.licenseKey;
-    const result = await editUser(vonaliaApiKey, password, {
+    const userKey = user.licenseKey || "";
+    const result = await editUser(vonaliaApiKey, password, userKey, {
       Hardware: "",
     });
 

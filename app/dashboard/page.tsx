@@ -182,6 +182,17 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, status]);
 
+  // Auto-check key status if needed (runs once after data loads)
+  useEffect(() => {
+    if (data?.hasLicense && data?.needsVerification && !isCheckingStatus) {
+      // Wait a moment for the UI to render, then check
+      const timer = setTimeout(() => {
+        handleCheckKeyStatus();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [data?.needsVerification]);
+
   const fetchDashboardData = async () => {
     try {
       const response = await fetch("/api/dashboard");

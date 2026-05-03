@@ -1,0 +1,17 @@
+name: Verify License Keys
+
+on:
+  schedule:
+    # Run every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Verify Keys API
+        run: |
+          curl -X POST "${{ secrets.NEXTAUTH_URL }}/api/cron/verify-keys" \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"

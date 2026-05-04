@@ -63,19 +63,23 @@ export async function createUser(
 
 export async function findUser(
   apiKey: string,
-  password: string,
-  _userKey?: string
+  _password: string,  // kept for backwards compatibility
+  userKey?: string
 ): Promise<VonaliaResponse> {
-  const requestBody = {
+  // Use Validate type like the Discord bot does
+  const requestBody: any = {
     Key: apiKey,
     Category: "Users",
-    Type: "Find",
-    Info: {
-      Password: password,
-    },
+    Type: "Validate",
+    Info: {},
   };
   
-  console.log("Vonalia FindUser Request:", JSON.stringify(requestBody, null, 2));
+  // Add Key if provided (bot uses this for validation)
+  if (userKey) {
+    requestBody.Info.Key = userKey;
+  }
+  
+  console.log("Vonalia Validate Request:", JSON.stringify(requestBody, null, 2));
   
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
@@ -86,7 +90,7 @@ export async function findUser(
   });
 
   const result = await response.json();
-  console.log("Vonalia FindUser Response:", JSON.stringify(result, null, 2));
+  console.log("Vonalia Validate Response:", JSON.stringify(result, null, 2));
   return result;
 }
 

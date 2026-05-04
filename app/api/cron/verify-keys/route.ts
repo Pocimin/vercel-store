@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         const password = user.licensePassword || user.licenseKey!;
-        const result = await findUser(VONALIA_API_KEY, password);
+        const userKey = user.licenseKey || "";
+        const result = await findUser(VONALIA_API_KEY, password, userKey);
 
         let keyStatus = "unknown";
         let needsUpdate = false;

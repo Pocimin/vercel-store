@@ -44,9 +44,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify key with Vonalia using the stored password
+    // Verify key with Vonalia using the stored password and key
     const password = user.licensePassword || user.licenseKey;
-    const result = await findUser(vonaliaApiKey, password);
+    const userKey = user.licenseKey || "";
+    const result = await findUser(vonaliaApiKey, password, userKey);
 
     // Determine key status
     let keyStatus = "unknown";

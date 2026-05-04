@@ -63,9 +63,10 @@ export async function createUser(
 
 export async function findUser(
   apiKey: string,
-  password: string
+  password: string,
+  userKey?: string
 ): Promise<VonaliaResponse> {
-  const requestBody = {
+  const requestBody: any = {
     Key: apiKey,
     Category: "Users",
     Type: "Find",
@@ -73,6 +74,11 @@ export async function findUser(
       Password: password,
     },
   };
+  
+  // Add Key to Info if provided (helps Vonalia locate the user)
+  if (userKey) {
+    requestBody.Info.Key = userKey;
+  }
   
   console.log("Vonalia FindUser Request:", JSON.stringify(requestBody, null, 2));
   

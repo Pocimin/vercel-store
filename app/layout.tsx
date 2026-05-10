@@ -9,9 +9,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "nznt's hub | DDS Script",
+  title: "nznt's hub | #1 Script Hub",
   description:
-    "The best Drag Drive Simulator script hub. Undetectable autofarm, fast earnings 20-30M/hour, and premium features.",
+    "The #1 Roblox script hub. Multi-game support, undetectable autofarms, anti-ban, and premium features.",
   generator: "nznt's hub",
   icons: {
     icon: "/avatar.png",

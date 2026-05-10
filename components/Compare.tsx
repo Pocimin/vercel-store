@@ -6,25 +6,24 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 const freeFeatures = [
-  { label: "Barista Farm", on: true },
-  { label: "Antiriot Bypass", on: true },
-  { label: "Motor Speedhack", on: true },
-  { label: "Auto Drive Farm", on: true },
-  { label: "Undetectable Autofarm", on: false },
-  { label: "Webhook Integration", on: false },
-  { label: "Banwave Detection", on: false },
+  { label: "Access to all supported games", on: true },
+  { label: "Core autofarms & utilities", on: true },
+  { label: "Anti-Ban protection", on: true },
+  { label: "Community support", on: true },
+  { label: "Universal vehicle support (DDS)", on: false },
+  { label: "Advanced autofarms (Drag, Mandalika, Office)", on: false },
+  { label: "Priority updates", on: false },
   { label: "Unlimited HWID Changes", on: false },
 ];
 
 const premiumFeatures = [
-  "All Free Features",
-  "Undetectable Autofarm (20-30M/hr)",
-  "Webhook Integration",
-  "Banwave Detection",
-  "Auto Rejoin",
-  "Works on All Vehicles",
+  "Everything in Free",
+  "Universal vehicle Auto Drive (DDS)",
+  "Drag, Mandalika & Office Autofarms",
+  "Priority updates & first access",
+  "Premium-only games & methods",
   "Unlimited HWID Changes",
-  "Priority Updates",
+  "Direct dev support on Discord",
 ];
 
 export const Compare = () => {
@@ -83,11 +82,11 @@ export const Compare = () => {
                 }`}
               >
                 {f.on ? (
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-500/15 text-emerald-400">
+                  <span className="grid h-5 w-5 place-items-center rounded-md bg-emerald-500/15 text-emerald-400">
                     <Check className="h-3 w-3" />
                   </span>
                 ) : (
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-muted text-muted-foreground">
+                  <span className="grid h-5 w-5 place-items-center rounded-md bg-muted text-muted-foreground">
                     <Lock className="h-3 w-3" />
                   </span>
                 )}
@@ -117,7 +116,7 @@ export const Compare = () => {
           <ul className="mt-6 space-y-3">
             {premiumFeatures.map((f) => (
               <li key={f} className="flex items-center gap-3 text-sm">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-amber-400/15 text-amber-400">
+                <span className="grid h-5 w-5 place-items-center rounded-md bg-amber-400/15 text-amber-400">
                   <Check className="h-3 w-3" />
                 </span>
                 {f}

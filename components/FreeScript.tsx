@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Check, Copy, Sparkles, Terminal } from "lucide-react";
 import Link from "next/link";
 
-const SCRIPT = `loadstring(game:HttpGet("https://raw.githubusercontent.com/nznt/dds-hub/main/free.lua"))()`;
+const SCRIPT = `loadstring(game:HttpGet("https://beta.vonalia.com/Obfuscate/nznt"))()`;
 
-const tags = ["Barista Farm", "Antiriot Bypass", "Motor Speedhack", "Auto Drive Farm"];
+const tags = ["Multi-game support", "Anti-ban", "Auto Farm", "Frequent updates"];
 
 export const FreeScript = () => {
   const [copied, setCopied] = useState(false);

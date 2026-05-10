@@ -19,13 +19,13 @@ export const Hero = () => (
     <div className="container mx-auto px-4 relative">
       <div className="mx-auto max-w-3xl text-center animate-fade-up">
         <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-[1.02] text-gradient">
-          The #1 DDS Script
+          The #1 Script Hub
           <br />
           for <span className="text-gradient-purple">Roblox</span>.
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-base md:text-lg text-muted-foreground">
-          First hub to fully bypass the anticheat. Earn 20-30M/hour with our
-          undetectable autofarm. 100% safe to use on main.
+          One hub, multiple games. Undetectable autofarms, anti-ban, and
+          premium features that actually work. 100% safe on main.
         </p>
 
         <div

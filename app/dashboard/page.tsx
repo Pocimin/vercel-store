@@ -270,7 +270,7 @@ export default function DashboardPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || "Failed to check key status");
+        setStatusMessage(result.error || "Failed to check key status");
         setIsCheckingStatus(false);
         return;
       }

@@ -47,9 +47,11 @@ export async function GET(request: NextRequest) {
     const hasLicense = !!user?.licenseKey;
 
     // Check if key needs verification (older than 30 mins)
-    const needsVerification = user?.lastKeyVerified 
-      ? Date.now() - new Date(user.lastKeyVerified).getTime() > 30 * 60 * 1000 
-      : true;
+    const statusNeedsRetry =
+      !user?.keyStatus || user.keyStatus === "unknown" || user.keyStatus === "error";
+    const needsVerification = statusNeedsRetry || (user?.lastKeyVerified
+      ? Date.now() - new Date(user.lastKeyVerified).getTime() > 30 * 60 * 1000
+      : true);
 
     return NextResponse.json({
       hasLicense,
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
         plan: user?.licenseType,
         expiresAt: user?.licenseExpiresAt,
         lastVerified: user?.lastKeyVerified,
-        status: user?.keyStatus || "unknown",
+        status: user?.keyStatus === "error" ? "unknown" : user?.keyStatus || "unknown",
       } : undefined,
       pendingPayment: pendingPayment || undefined,
       needsVerification,

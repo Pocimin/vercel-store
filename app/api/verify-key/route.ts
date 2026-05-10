@@ -48,13 +48,20 @@ export async function POST(request: NextRequest) {
     const password = user.licensePassword || user.licenseKey;
     const result = await findUser(vonaliaApiKey, password);
 
-    // Determine key status
+    // Determine key status. Transient Vonalia/API failures are not a key status.
     let keyStatus = "unknown";
     if (result.Error) {
-      if (result.Error.includes("not found") || result.Error.includes("invalid")) {
+      const error = result.Error.toLowerCase();
+      if (error.includes("not found") || error.includes("invalid")) {
         keyStatus = "invalid";
       } else {
-        keyStatus = "error";
+        return NextResponse.json(
+          {
+            error: "Could not verify key with Vonalia. Please try again.",
+            detail: result.Error,
+          },
+          { status: 502 }
+        );
       }
     } else if (result.Info) {
       // Check if expired based on Whitelist timestamp
@@ -72,7 +79,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update user with verification timestamp and status
+    // Update user only after a definitive key result.
     await prisma.user.update({
       where: { id: userId },
       data: {

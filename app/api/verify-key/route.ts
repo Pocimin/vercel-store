@@ -44,21 +44,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vonalia's Find endpoint looks users up by password only.
-    const password = user.licensePassword || user.licenseKey;
-    const result = await findUser(vonaliaApiKey, password);
+    // Vonalia's Find endpoint looks users up by password only. Some older
+    // records may have the key saved where the password should be, so try both.
+    const passwordCandidates = [
+      user.licensePassword,
+      user.licenseKey,
+    ].filter((value, index, values): value is string => {
+      return !!value && values.indexOf(value) === index;
+    });
+
+    let result: Awaited<ReturnType<typeof findUser>> | null = null;
+    let successfulPassword: string | null = null;
+    const errors: string[] = [];
+
+    for (const password of passwordCandidates) {
+      result = await findUser(vonaliaApiKey, password);
+      if (!result.Error) {
+        successfulPassword = password;
+        break;
+      }
+      errors.push(result.Error);
+    }
 
     // Determine key status. Transient Vonalia/API failures are not a key status.
     let keyStatus = "unknown";
-    if (result.Error) {
-      const error = result.Error.toLowerCase();
+    if (!result || result.Error) {
+      const combinedError = errors.join("; ") || result?.Error || "Unknown error";
+      const error = combinedError.toLowerCase();
       if (error.includes("not found") || error.includes("invalid")) {
         keyStatus = "invalid";
       } else {
         return NextResponse.json(
           {
             error: "Could not verify key with Vonalia. Please try again.",
-            detail: result.Error,
+            detail: combinedError,
           },
           { status: 502 }
         );
@@ -85,6 +104,9 @@ export async function POST(request: NextRequest) {
       data: {
         lastKeyVerified: new Date(),
         keyStatus: keyStatus,
+        ...(successfulPassword && successfulPassword !== user.licensePassword
+          ? { licensePassword: successfulPassword }
+          : {}),
       },
     });
 
@@ -92,7 +114,7 @@ export async function POST(request: NextRequest) {
       success: true,
       keyStatus,
       lastVerified: new Date().toISOString(),
-      vonaliaData: result.Info || null,
+      vonaliaData: result?.Info || null,
     });
 
   } catch (error) {

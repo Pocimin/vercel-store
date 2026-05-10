@@ -67,19 +67,37 @@ export async function POST(request: NextRequest) {
         // Add small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        const password = user.licensePassword || user.licenseKey!;
-        const result = await findUser(VONALIA_API_KEY, password);
+        const passwordCandidates = [
+          user.licensePassword,
+          user.licenseKey,
+        ].filter((value, index, values): value is string => {
+          return !!value && values.indexOf(value) === index;
+        });
+
+        let result: Awaited<ReturnType<typeof findUser>> | null = null;
+        let successfulPassword: string | null = null;
+        const errors: string[] = [];
+
+        for (const password of passwordCandidates) {
+          result = await findUser(VONALIA_API_KEY, password);
+          if (!result.Error) {
+            successfulPassword = password;
+            break;
+          }
+          errors.push(result.Error);
+        }
 
         let keyStatus = "unknown";
         let needsUpdate = false;
 
-        if (result.Error) {
-          if (result.Error.includes("not found") || result.Error.includes("invalid")) {
+        if (!result || result.Error) {
+          const combinedError = errors.join("; ") || result?.Error || "Unknown error";
+          const error = combinedError.toLowerCase();
+          if (error.includes("not found") || error.includes("invalid")) {
             keyStatus = "invalid";
             results.invalid++;
             needsUpdate = true;
           } else {
-            keyStatus = "error";
             results.errors++;
           }
         } else if (result.Info) {
@@ -108,6 +126,9 @@ export async function POST(request: NextRequest) {
             data: {
               lastKeyVerified: new Date(),
               keyStatus: keyStatus,
+              ...(successfulPassword && successfulPassword !== user.licensePassword
+                ? { licensePassword: successfulPassword }
+                : {}),
             },
           });
           results.updated.push(user.id);

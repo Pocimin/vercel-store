@@ -37,7 +37,7 @@ export async function createUser(
   note?: string
 ): Promise<CreateUserResponse> {
   const requestBody: any = {
-    Key: apiKey,
+    Key: apiKey.trim(),
     Category: "Users",
     Type: "Create",
     Info: {
@@ -65,17 +65,19 @@ export async function findUser(
   apiKey: string,
   password: string
 ): Promise<VonaliaResponse> {
+  const normalizedPassword = password.trim();
+
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      Key: apiKey,
+      Key: apiKey.trim(),
       Category: "Users",
       Type: "Find",
       Info: {
-        Password: password,
+        Password: normalizedPassword,
       },
     }),
   });
@@ -107,12 +109,12 @@ export async function editUser(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      Key: apiKey,
+      Key: apiKey.trim(),
       Category: "Users",
       Type: "Edit",
       Info: {
-        Key: userKey,
-        Password: password,
+        Key: userKey.trim(),
+        Password: password.trim(),
         ...updates,
       },
     }),
@@ -131,11 +133,11 @@ export async function deleteUser(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      Key: apiKey,
+      Key: apiKey.trim(),
       Category: "Users",
       Type: "Delete",
       Info: {
-        Password: password,
+        Password: password.trim(),
       },
     }),
   });

@@ -67,32 +67,18 @@ export async function POST(request: NextRequest) {
         // Add small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        const passwordCandidates = [
-          user.licensePassword,
-          user.licenseKey,
-        ].filter((value, index, values): value is string => {
-          return !!value && values.indexOf(value) === index;
-        });
-
-        let result: Awaited<ReturnType<typeof findUser>> | null = null;
-        let successfulPassword: string | null = null;
-        const errors: string[] = [];
-
-        for (const password of passwordCandidates) {
-          result = await findUser(VONALIA_API_KEY, password);
-          if (!result.Error) {
-            successfulPassword = password;
-            break;
-          }
-          errors.push(result.Error);
+        const password = (user.licensePassword || user.licenseKey || "").trim();
+        if (!password) {
+          results.errors++;
+          continue;
         }
+        const result = await findUser(VONALIA_API_KEY, password);
 
         let keyStatus = "unknown";
         let needsUpdate = false;
 
-        if (!result || result.Error) {
-          const combinedError = errors.join("; ") || result?.Error || "Unknown error";
-          const error = combinedError.toLowerCase();
+        if (result.Error) {
+          const error = result.Error.toLowerCase();
           if (error.includes("not found") || error.includes("invalid")) {
             keyStatus = "invalid";
             results.invalid++;
@@ -126,8 +112,8 @@ export async function POST(request: NextRequest) {
             data: {
               lastKeyVerified: new Date(),
               keyStatus: keyStatus,
-              ...(successfulPassword && successfulPassword !== user.licensePassword
-                ? { licensePassword: successfulPassword }
+              ...(password !== user.licensePassword
+                ? { licensePassword: password }
                 : {}),
             },
           });

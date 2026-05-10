@@ -63,37 +63,24 @@ export async function createUser(
 
 export async function findUser(
   apiKey: string,
-  password: string,
-  userKey?: string
+  password: string
 ): Promise<VonaliaResponse> {
-  // Use Find type with both Key and Password (similar to Edit API structure)
-  const requestBody: any = {
-    Key: apiKey,
-    Category: "Users",
-    Type: "Find",
-    Info: {
-      Password: password,
-    },
-  };
-  
-  // Add Key to Info if provided (like Edit API does)
-  if (userKey) {
-    requestBody.Info.Key = userKey;
-  }
-  
-  console.log("Vonalia Find Request:", JSON.stringify(requestBody, null, 2));
-  
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(requestBody),
+    body: JSON.stringify({
+      Key: apiKey,
+      Category: "Users",
+      Type: "Find",
+      Info: {
+        Password: password,
+      },
+    }),
   });
 
-  const result = await response.json();
-  console.log("Vonalia Find Response:", JSON.stringify(result, null, 2));
-  return result;
+  return response.json();
 }
 
 export async function editUser(

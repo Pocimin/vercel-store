@@ -44,10 +44,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify key with Vonalia using the stored password and key
+    // Vonalia's Find endpoint looks users up by password only.
     const password = user.licensePassword || user.licenseKey;
-    const userKey = user.licenseKey || "";
-    const result = await findUser(vonaliaApiKey, password, userKey);
+    const result = await findUser(vonaliaApiKey, password);
 
     // Determine key status
     let keyStatus = "unknown";
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
       if (whitelist) {
         const whitelistTime = parseInt(whitelist);
         const now = Math.floor(Date.now() / 1000);
-        if (whitelistTime < now) {
+        if (whitelistTime !== 0 && whitelistTime < now) {
           keyStatus = "expired";
         } else {
           keyStatus = "active";

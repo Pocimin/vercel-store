@@ -68,8 +68,7 @@ export async function POST(request: NextRequest) {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         const password = user.licensePassword || user.licenseKey!;
-        const userKey = user.licenseKey || "";
-        const result = await findUser(VONALIA_API_KEY, password, userKey);
+        const result = await findUser(VONALIA_API_KEY, password);
 
         let keyStatus = "unknown";
         let needsUpdate = false;
@@ -88,7 +87,7 @@ export async function POST(request: NextRequest) {
           if (whitelist) {
             const whitelistTime = parseInt(whitelist);
             const now = Math.floor(Date.now() / 1000);
-            if (whitelistTime < now) {
+            if (whitelistTime !== 0 && whitelistTime < now) {
               keyStatus = "expired";
               results.expired++;
             } else {

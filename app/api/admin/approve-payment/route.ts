@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
-import { createUser, getWhitelistTimestamp } from "@/lib/vonalia";
+import { createUser, editUser } from "@/lib/vonalia";
 import { applyRateLimit } from "@/lib/rate-limit";
 
 const VONALIA_API_KEY = process.env.VONALIA_API_KEY;
@@ -84,13 +84,12 @@ export async function POST(request: NextRequest) {
     const keyData = await createUser(
       VONALIA_API_KEY,
       vonaliaType as "Free" | "Weekly" | "Monthly" | "Lifetime",
-      whitelistTimestamp,
-      note
+      whitelistTimestamp
     );
 
     const createdUser = keyData.Info?.Info;
     const licenseKey = createdUser?.Key || keyData.Info?.Key || "";
-    const licensePassword = createdUser?.Password;
+    const licensePassword = createdUser?.Password || keyData.Info?.Password;
 
     if (keyData.Error || !licensePassword) {
       console.log("Vonalia create key error:", JSON.stringify(keyData, null, 2));
@@ -98,6 +97,14 @@ export async function POST(request: NextRequest) {
         { error: `Failed to create license key: ${keyData.Error || "Missing password in response"}` },
         { status: 500 }
       );
+    }
+
+    if (note) {
+      try {
+        await editUser(VONALIA_API_KEY, licensePassword, licenseKey, { Note: note });
+      } catch (error) {
+        console.error("Failed to add Vonalia note:", error);
+      }
     }
 
     // Calculate expiration

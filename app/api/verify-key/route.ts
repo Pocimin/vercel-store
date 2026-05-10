@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
-import { findUser } from "@/lib/vonalia";
+import { findUser, normalizeVonaliaCredential } from "@/lib/vonalia";
 import { applyRateLimit } from "@/lib/rate-limit";
 
 const SECRET = process.env.NEXTAUTH_SECRET;
@@ -44,15 +44,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedApiKey = normalizeVonaliaCredential(vonaliaApiKey);
+    if (
+      normalizedApiKey.length < 64 ||
+      normalizedApiKey.toLowerCase().includes("your_") ||
+      normalizedApiKey.toLowerCase().includes("placeholder")
+    ) {
+      return NextResponse.json(
+        { error: "Server Vonalia API key is misconfigured" },
+        { status: 500 }
+      );
+    }
+
     // Vonalia's Find endpoint looks users up by password only.
-    const password = (user.licensePassword || user.licenseKey).trim();
+    const password = normalizeVonaliaCredential(user.licensePassword || user.licenseKey);
     if (!password) {
       return NextResponse.json(
         { error: "No license password found" },
         { status: 400 }
       );
     }
-    const result = await findUser(vonaliaApiKey, password);
+    const result = await findUser(normalizedApiKey, password);
 
     // Determine key status. Transient Vonalia/API failures are not a key status.
     let keyStatus = "unknown";

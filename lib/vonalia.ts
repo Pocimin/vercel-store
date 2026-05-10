@@ -1,5 +1,16 @@
 const VONALIA_API_URL = "https://beta.vonalia.com/api/v1/Infrastructure";
 
+export function normalizeVonaliaCredential(value: string): string {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
 interface VonaliaResponse {
   Info?: {
     Key?: string;
@@ -22,6 +33,7 @@ interface VonaliaResponse {
 interface CreateUserResponse {
   Info?: {
     Key?: string;
+    Password?: string;
     Info?: {
       Key?: string;
       Password?: string;
@@ -36,8 +48,9 @@ export async function createUser(
   whitelistTimestamp: number,
   note?: string
 ): Promise<CreateUserResponse> {
+  const normalizedApiKey = normalizeVonaliaCredential(apiKey);
   const requestBody: any = {
-    Key: apiKey.trim(),
+    Key: normalizedApiKey,
     Category: "Users",
     Type: "Create",
     Info: {
@@ -45,11 +58,7 @@ export async function createUser(
       Whitelist: whitelistTimestamp.toString(),
     },
   };
-  
-  if (note) {
-    requestBody.Info.Note = note;
-  }
-  
+
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
     headers: {
@@ -65,7 +74,8 @@ export async function findUser(
   apiKey: string,
   password: string
 ): Promise<VonaliaResponse> {
-  const normalizedPassword = password.trim();
+  const normalizedApiKey = normalizeVonaliaCredential(apiKey);
+  const normalizedPassword = normalizeVonaliaCredential(password);
 
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
@@ -73,7 +83,7 @@ export async function findUser(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      Key: apiKey.trim(),
+      Key: normalizedApiKey,
       Category: "Users",
       Type: "Find",
       Info: {
@@ -103,18 +113,22 @@ export async function editUser(
     Note: string;
   }>
 ): Promise<VonaliaResponse> {
+  const normalizedApiKey = normalizeVonaliaCredential(apiKey);
+  const normalizedPassword = normalizeVonaliaCredential(password);
+  const normalizedUserKey = normalizeVonaliaCredential(userKey);
+
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      Key: apiKey.trim(),
+      Key: normalizedApiKey,
       Category: "Users",
       Type: "Edit",
       Info: {
-        Key: userKey.trim(),
-        Password: password.trim(),
+        Key: normalizedUserKey,
+        Password: normalizedPassword,
         ...updates,
       },
     }),
@@ -127,17 +141,20 @@ export async function deleteUser(
   apiKey: string,
   password: string
 ): Promise<VonaliaResponse> {
+  const normalizedApiKey = normalizeVonaliaCredential(apiKey);
+  const normalizedPassword = normalizeVonaliaCredential(password);
+
   const response = await fetch(VONALIA_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      Key: apiKey.trim(),
+      Key: normalizedApiKey,
       Category: "Users",
       Type: "Delete",
       Info: {
-        Password: password.trim(),
+        Password: normalizedPassword,
       },
     }),
   });

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { applyRateLimit } from "@/lib/rate-limit";
 import { normalizeVonaliaCredential } from "@/lib/vonalia";
 
 const VONALIA_BASE_URL = process.env.VONALIA_BASE_URL || "https://vonalia.com/api/v1";
@@ -52,9 +51,6 @@ async function parseUpstreamResponse(response: Response) {
 }
 
 export async function POST(request: NextRequest) {
-  const rateLimitResponse = await applyRateLimit(request, 120, 60 * 1000);
-  if (rateLimitResponse) return rateLimitResponse;
-
   if (!VONALIA_API_KEY || !PROXY_SECRET) {
     return NextResponse.json(
       { error: "Vonalia proxy is not configured" },
@@ -96,16 +92,25 @@ export async function POST(request: NextRequest) {
     const contentType = upstreamResponse.headers.get("content-type") || "";
 
     if (data === null) {
-      return new NextResponse(null, { status: upstreamResponse.status });
+      return new NextResponse(null, {
+        status: upstreamResponse.status,
+        headers: { "X-NZNT-Proxy-Source": "vonalia" },
+      });
     }
 
     if (contentType.includes("application/json") || typeof data === "object") {
-      return NextResponse.json(data, { status: upstreamResponse.status });
+      return NextResponse.json(data, {
+        status: upstreamResponse.status,
+        headers: { "X-NZNT-Proxy-Source": "vonalia" },
+      });
     }
 
     return new NextResponse(String(data), {
       status: upstreamResponse.status,
-      headers: { "Content-Type": contentType || "text/plain" },
+      headers: {
+        "Content-Type": contentType || "text/plain",
+        "X-NZNT-Proxy-Source": "vonalia",
+      },
     });
   } catch (error) {
     return NextResponse.json(

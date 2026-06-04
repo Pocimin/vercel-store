@@ -226,16 +226,24 @@ export async function createUser(
   try {
     const teamId = requireTeamIds(type)[0];
     const expiration = toExpirationMs(whitelistTimestamp);
-    const created = await vonaliaRequest(apiKey, "POST", `/teams/${teamId}/users`, {
-      type,
-      expiration,
-      ...(note ? { note } : {}),
-    });
+    const created = await vonaliaRequest(apiKey, "POST", `/teams/${teamId}/users`);
 
     const userId = created?.user_id || created?.userId || created?.id;
     if (!userId) {
       return { Error: "Vonalia did not return a user_id" };
     }
+
+    const updates: Record<string, unknown> = {
+      type,
+      expiration,
+      ...(note ? { note } : {}),
+    };
+    await vonaliaRequest(
+      apiKey,
+      "PATCH",
+      `/teams/${teamId}/users/${encodeURIComponent(userId)}`,
+      updates
+    );
 
     const user = await vonaliaRequest(
       apiKey,

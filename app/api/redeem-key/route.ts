@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
 import { applyRateLimit } from "@/lib/rate-limit";
+import { findUser, normalizeVonaliaCredential } from "@/lib/vonalia";
 
 const SECRET = process.env.NEXTAUTH_SECRET;
 
@@ -31,11 +32,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate key format: KEY_ followed by 128 hex characters
-    const keyRegex = /^KEY_[a-fA-F0-9]{128}$/;
-    if (!keyRegex.test(key)) {
+    const normalizedKey = normalizeVonaliaCredential(key);
+    if (!/^((KEY|USER)_[A-Za-z0-9_-]+)$/.test(normalizedKey)) {
       return NextResponse.json(
-        { error: "Invalid key format. Key must start with KEY_ followed by 128 hexadecimal characters." },
+        { error: "Invalid key format" },
         { status: 400 }
       );
     }
@@ -52,21 +52,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Store the key directly (like Discord bot does)
-    // Try to determine type from key format
-    let licenseType = "unknown";
-    if (key.toLowerCase().includes("weekly")) licenseType = "weekly";
-    else if (key.toLowerCase().includes("monthly")) licenseType = "monthly";
-    else if (key.toLowerCase().includes("lifetime")) licenseType = "lifetime";
+    const vonaliaApiKey = process.env.VONALIA_API_KEY;
+    if (!vonaliaApiKey) {
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    const result = await findUser(vonaliaApiKey, normalizedKey);
+    if (result.Error || !result.Info) {
+      return NextResponse.json(
+        { error: "Invalid key or password" },
+        { status: 404 }
+      );
+    }
+
+    const info = result.Info;
+    const licenseType = (info.Type || info.type || "unknown").toLowerCase();
+    const expirationSeconds = Number(info.Whitelist || 0);
+    const licenseExpiresAt =
+      Number.isFinite(expirationSeconds) && expirationSeconds > 0
+        ? new Date(expirationSeconds * 1000)
+        : null;
 
     // Update user with license info
     await prisma.user.update({
       where: { id: userId },
       data: {
-        licenseKey: key,
-        licensePassword: key,
+        licenseKey: info.Key || info.key || normalizedKey,
+        licensePassword: info.Password || info.password || normalizedKey,
         licenseType: licenseType,
-        licenseExpiresAt: null, // Local keys don't have expiration tracking
+        licenseExpiresAt,
+        keyStatus: "active",
+        lastKeyVerified: new Date(),
       },
     });
 

@@ -90,18 +90,40 @@ export async function POST(request: NextRequest) {
 
     const data = await parseUpstreamResponse(upstreamResponse);
     const contentType = upstreamResponse.headers.get("content-type") || "";
+    const proxyHeaders = { "X-NZNT-Proxy-Source": "vonalia" };
+
+    if (!upstreamResponse.ok) {
+      const message =
+        typeof data === "object" && data?.error
+          ? data.error
+          : typeof data === "string" && data
+            ? data
+            : `Vonalia HTTP Error: ${upstreamResponse.status}`;
+
+      return NextResponse.json(
+        {
+          error: message,
+          source: "vonalia",
+          status: upstreamResponse.status,
+        },
+        {
+          status: upstreamResponse.status,
+          headers: proxyHeaders,
+        }
+      );
+    }
 
     if (data === null) {
       return new NextResponse(null, {
         status: upstreamResponse.status,
-        headers: { "X-NZNT-Proxy-Source": "vonalia" },
+        headers: proxyHeaders,
       });
     }
 
     if (contentType.includes("application/json") || typeof data === "object") {
       return NextResponse.json(data, {
         status: upstreamResponse.status,
-        headers: { "X-NZNT-Proxy-Source": "vonalia" },
+        headers: proxyHeaders,
       });
     }
 
@@ -109,7 +131,7 @@ export async function POST(request: NextRequest) {
       status: upstreamResponse.status,
       headers: {
         "Content-Type": contentType || "text/plain",
-        "X-NZNT-Proxy-Source": "vonalia",
+        ...proxyHeaders,
       },
     });
   } catch (error) {

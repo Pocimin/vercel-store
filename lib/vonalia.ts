@@ -13,6 +13,27 @@ export function normalizeVonaliaCredential(value: string): string {
   return trimmed;
 }
 
+export function isUsableVonaliaApiKey(value: string | undefined): boolean {
+  const normalized = normalizeVonaliaCredential(value || "");
+  const lowered = normalized.toLowerCase();
+
+  return (
+    normalized.startsWith("API_") &&
+    normalized.length > "API_".length &&
+    !lowered.includes("your_") &&
+    !lowered.includes("placeholder")
+  );
+}
+
+export function sanitizeVonaliaNote(value: string | null | undefined): string {
+  const cleaned = String(value || "")
+    .replace(/[^A-Za-z0-9 .,:]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return (cleaned || "web user").slice(0, 100);
+}
+
 interface StableVonaliaUser {
   password?: string | null;
   key?: string | null;
@@ -163,8 +184,8 @@ function normalizeUpdate(updates: VonaliaUpdate): Record<string, unknown> {
   if ("IP" in updates) body.ip = updates.IP;
   if ("type" in updates) body.type = updates.type;
   if ("Type" in updates) body.type = updates.Type;
-  if ("note" in updates) body.note = updates.note;
-  if ("Note" in updates) body.note = updates.Note;
+  if ("note" in updates) body.note = sanitizeVonaliaNote(updates.note);
+  if ("Note" in updates) body.note = sanitizeVonaliaNote(updates.Note);
   if ("roblox_id" in updates) body.roblox_id = updates.roblox_id;
   if ("Roblox" in updates) body.roblox_id = updates.Roblox;
   if ("active" in updates) body.active = updates.active;
@@ -226,7 +247,7 @@ export async function createUser(
   try {
     const teamId = requireTeamIds(type)[0];
     const expiration = toExpirationMs(whitelistTimestamp);
-    const created = await vonaliaRequest(apiKey, "POST", `/teams/${teamId}/users`);
+    const created = await vonaliaRequest(apiKey, "POST", `/teams/${teamId}/users`, {});
 
     const userId = created?.user_id || created?.userId || created?.id;
     if (!userId) {
@@ -236,7 +257,7 @@ export async function createUser(
     const updates: Record<string, unknown> = {
       type,
       expiration,
-      ...(note ? { note } : {}),
+      ...(note ? { note: sanitizeVonaliaNote(note) } : {}),
     };
     await vonaliaRequest(
       apiKey,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { findUser, normalizeVonaliaCredential } from "@/lib/vonalia";
+import { findUser, isUsableVonaliaApiKey, normalizeVonaliaCredential } from "@/lib/vonalia";
 
 const VONALIA_API_KEY = process.env.VONALIA_API_KEY;
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -30,11 +30,7 @@ export async function POST(request: NextRequest) {
   }
 
   const normalizedApiKey = normalizeVonaliaCredential(VONALIA_API_KEY);
-  if (
-    normalizedApiKey.length < 64 ||
-    normalizedApiKey.toLowerCase().includes("your_") ||
-    normalizedApiKey.toLowerCase().includes("placeholder")
-  ) {
+  if (!isUsableVonaliaApiKey(normalizedApiKey)) {
     return NextResponse.json(
       { error: "Vonalia API key is misconfigured" },
       { status: 500 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
-import { findUser, normalizeVonaliaCredential } from "@/lib/vonalia";
+import { findUser, isUsableVonaliaApiKey, normalizeVonaliaCredential } from "@/lib/vonalia";
 import { applyRateLimit } from "@/lib/rate-limit";
 
 const SECRET = process.env.NEXTAUTH_SECRET;
@@ -45,11 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedApiKey = normalizeVonaliaCredential(vonaliaApiKey);
-    if (
-      normalizedApiKey.length < 64 ||
-      normalizedApiKey.toLowerCase().includes("your_") ||
-      normalizedApiKey.toLowerCase().includes("placeholder")
-    ) {
+    if (!isUsableVonaliaApiKey(normalizedApiKey)) {
       return NextResponse.json(
         { error: "Server Vonalia API key is misconfigured" },
         { status: 500 }

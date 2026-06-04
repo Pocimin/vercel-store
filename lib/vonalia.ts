@@ -273,7 +273,10 @@ export async function createUser(
     );
 
     return {
-      Info: normalizeInfo(user),
+      Info: {
+        ...normalizeInfo(user),
+        Password: String(userId),
+      },
       teamId,
       userId,
     };

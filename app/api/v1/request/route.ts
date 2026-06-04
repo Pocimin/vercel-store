@@ -93,8 +93,16 @@ export async function POST(request: NextRequest) {
     const proxyHeaders = { "X-NZNT-Proxy-Source": "vonalia" };
 
     if (!upstreamResponse.ok) {
+      const isCloudflareChallenge =
+        typeof data === "string" &&
+        (data.includes("Just a moment") ||
+          data.includes("__cf_chl_opt") ||
+          data.includes("challenges.cloudflare.com"));
+
       const message =
-        typeof data === "object" && data?.error
+        isCloudflareChallenge
+          ? "Vonalia Cloudflare challenge blocked the server-to-server API request"
+          : typeof data === "object" && data?.error
           ? data.error
           : typeof data === "string" && data
             ? data
@@ -105,6 +113,7 @@ export async function POST(request: NextRequest) {
           error: message,
           source: "vonalia",
           status: upstreamResponse.status,
+          blockedBy: isCloudflareChallenge ? "cloudflare_challenge" : undefined,
         },
         {
           status: upstreamResponse.status,

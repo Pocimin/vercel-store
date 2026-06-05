@@ -5,7 +5,7 @@ import { Check, Copy } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const SCRIPT = `loadstring(game:HttpGet("https://vonalia.com/api/v1/scripts/1780567340102"))()`;
+const SCRIPT = `loadstring(game:HttpGet("https://scripts.nznt.store/raw.php?file=nznt_free.lua"))()`;
 
 export const FreeScript = () => {
   const [copied, setCopied] = useState(false);

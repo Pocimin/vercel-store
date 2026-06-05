@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Copy, Sparkles, Terminal } from "lucide-react";
 import Link from "next/link";
 
-const SCRIPT = `loadstring(game:HttpGet("https://beta.vonalia.com/Obfuscate/nznt"))()`;
+const SCRIPT = `loadstring(game:HttpGet("https://vonalia.com/api/v1/scripts/1780567340102"))()`;
 
 const tags = ["Multi-game support", "Anti-ban", "Auto Farm", "Frequent updates"];
 

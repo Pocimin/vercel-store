@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export function FreeScriptSection() {
   const [copied, setCopied] = useState(false);
 
-  const freeScript = `loadstring(game:HttpGet("https://raw.githubusercontent.com/nznt/dds-hub/main/free.lua"))()`;
+  const freeScript = `loadstring(game:HttpGet("https://vonalia.com/api/v1/scripts/1780567340102"))()`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(freeScript);

@@ -19,7 +19,7 @@ model User {
   // License info
   licenseKey    String?
   licensePassword String?
-  licenseType   String?   // weekly, monthly, lifetime
+  licenseType   String?   // weekly, monthly; legacy lifetime may still exist
   licenseExpiresAt DateTime? @db.Timestamptz(6)
   
   // Key verification tracking
@@ -35,7 +35,7 @@ model Payment {
   userId        String
   user          User      @relation(fields: [userId], references: [id])
   
-  plan          String    // weekly, monthly, lifetime
+  plan          String    // weekly, monthly; legacy lifetime may still exist
   paymentMethod String    // qris, paypal, robux
   status        String    @default("pending") // pending, approved, declined
   

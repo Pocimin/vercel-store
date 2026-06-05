@@ -18,9 +18,9 @@ export const Navbar = () => (
         <span>nznt&apos;s hub</span>
       </Link>
       <nav className="hidden md:flex items-center gap-7 text-sm text-muted-foreground">
-        <a href="/#games" className="hover:text-foreground transition-colors">Games</a>
+        <Link href="/games" className="hover:text-foreground transition-colors">Games</Link>
         <a href="/#free-script" className="hover:text-foreground transition-colors">Script</a>
-        <a href="/#features" className="hover:text-foreground transition-colors">Compare</a>
+        <Link href="/features" className="hover:text-foreground transition-colors">Compare</Link>
         <Link href="/premium" className="hover:text-foreground transition-colors">Premium</Link>
         <Link href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link>
         <a href="/#faq" className="hover:text-foreground transition-colors">FAQ</a>

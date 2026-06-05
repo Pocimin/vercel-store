@@ -42,17 +42,8 @@ const plans = [
     price: "Rp 30,000",
     priceUsd: "~$3",
     duration: "30 days",
-    popular: false,
-    robuxLink: "https://www.roblox.com/game-pass/782821333/Megan",
-  },
-  {
-    id: "lifetime",
-    name: "Lifetime",
-    price: "Rp 50,000",
-    priceUsd: "~$4",
-    duration: "Forever",
     popular: true,
-    robuxLink: "https://www.roblox.com/game-pass/981419031/aku-butuh-duittt",
+    robuxLink: "https://www.roblox.com/game-pass/782821333/Megan",
   },
 ];
 

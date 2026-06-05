@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate plan and payment method
-    const validPlans = ["weekly", "monthly", "lifetime"];
+    const validPlans = ["weekly", "monthly"];
     const validPaymentMethods = ["qris", "paypal", "robux"];
     
     if (!validPlans.includes(plan) || !validPaymentMethods.includes(paymentMethod)) {
@@ -87,13 +87,11 @@ export async function POST(request: NextRequest) {
     const planPrices: Record<string, string> = {
       weekly: "Rp 10,000 (~$1)",
       monthly: "Rp 30,000 (~$3)",
-      lifetime: "Rp 50,000 (~$4)",
     };
 
     const planDurations: Record<string, string> = {
       weekly: "7 days",
       monthly: "30 days",
-      lifetime: "Forever",
     };
 
     // Fetch user data

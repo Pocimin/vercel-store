@@ -55,6 +55,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (payment.plan !== "weekly" && payment.plan !== "monthly") {
+      return NextResponse.json(
+        { error: "New lifetime approvals are disabled. Only weekly and monthly are available." },
+        { status: 400 }
+      );
+    }
+
     if (!VONALIA_API_KEY) {
       return NextResponse.json(
         { error: "Vonalia API key not configured" },
@@ -63,17 +70,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create license key via Vonalia API
-    const duration = payment.plan === "weekly" ? 7 * 86400 : 
-                     payment.plan === "monthly" ? 30 * 86400 : 0;
-    
-    // For lifetime, use 8000000000 unix timestamp
-    const whitelistTimestamp = payment.plan === "lifetime" 
-      ? 8000000000 
-      : Math.floor(Date.now() / 1000) + duration;
-
-    // Use lowercase types as requested
-    const vonaliaType = payment.plan === "lifetime" ? "lifetime" : 
-                        payment.plan === "weekly" ? "weekly" : "monthly";
+    const duration = payment.plan === "weekly" ? 7 * 86400 : 30 * 86400;
+    const whitelistTimestamp = Math.floor(Date.now() / 1000) + duration;
+    const vonaliaType = payment.plan === "weekly" ? "weekly" : "monthly";
     
     // Format note as web_(discord) or web_(random string)
     const randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -108,9 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate expiration
-    const expiresAt = payment.plan === "lifetime" 
-      ? null 
-      : new Date(Date.now() + duration * 1000);
+    const expiresAt = new Date(Date.now() + duration * 1000);
 
     // Update user with license info
     await prisma.user.update({

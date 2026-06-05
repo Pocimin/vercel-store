@@ -1,19 +1,17 @@
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 type Game = {
   name: string;
   image: string;
-  label: string;
   summary: string;
   notes: string[];
-  availability: "Free" | "Premium" | "Free + Premium";
+  availability: "Free" | "Premium" | "Free / Premium";
 };
 
 const games: Game[] = [
   {
     name: "Blox Fruits",
     image: "https://tr.rbxcdn.com/180DAY-a64f70da20fc1e80ee76fe5d49c1be0a/256/256/Image/Webp/noFilter",
-    label: "Progression",
     summary: "Questing, farming, and travel tools for the usual grind loop.",
     notes: ["Farm routines", "Movement helpers", "Boss and quest flow"],
     availability: "Free",
@@ -21,15 +19,13 @@ const games: Game[] = [
   {
     name: "Drag Drive Simulator",
     image: "https://tr.rbxcdn.com/180DAY-b722091cca44e695cd73ed89af4be42c/256/256/Image/Webp/noFilter",
-    label: "Vehicles",
     summary: "DDS gets the deepest coverage, including the paid vehicle methods.",
     notes: ["Auto drive farm", "Barista route", "Premium route set"],
-    availability: "Free + Premium",
+    availability: "Free / Premium",
   },
   {
     name: "CDID",
     image: "https://tr.rbxcdn.com/180DAY-9f546c3a4929e483241f27ddabc09945/256/256/Image/Webp/noFilter",
-    label: "Driving",
     summary: "A full public setup focused on money routes and device-friendly checks.",
     notes: ["Low device mode", "Minigame tools", "Ping-aware teleport"],
     availability: "Free",
@@ -37,7 +33,6 @@ const games: Game[] = [
   {
     name: "Evade",
     image: "https://tr.rbxcdn.com/180DAY-bf95a86e5f5e37bf61a5f33401e95deb/512/512/Image/Webp/noFilter",
-    label: "Survival",
     summary: "Movement and round tools made for quick escapes and cleaner farming.",
     notes: ["Round assists", "Mobility tools", "Safe utility toggles"],
     availability: "Free",
@@ -45,7 +40,6 @@ const games: Game[] = [
   {
     name: "Slime RNG",
     image: "https://tr.rbxcdn.com/180DAY-2f7978b674aeb4273e19ba6fa25bb846/512/512/Image/Webp/noFilter",
-    label: "RNG",
     summary: "A simple automation stack from rolling through upgrades and rebirths.",
     notes: ["Auto farm", "Auto upgrade", "Zone and rebirth flow"],
     availability: "Free",
@@ -53,7 +47,6 @@ const games: Game[] = [
   {
     name: "Sailor Piece",
     image: "https://tr.rbxcdn.com/180DAY-ccd8518083f3003a2f934784176030d3/512/512/Image/Webp/noFilter",
-    label: "Adventure",
     summary: "Quest, farm, and progression helpers for keeping the route moving.",
     notes: ["Quest routines", "Farm helpers", "Travel utility"],
     availability: "Free",
@@ -96,21 +89,19 @@ const GameCard = ({ game }: { game: Game }) => (
           loading="lazy"
         />
         <div className="min-w-0 pt-0.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-md border border-primary/25 bg-primary/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-              {game.label}
-            </span>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Access{" "}
             <span
-              className={`rounded-md border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
-                game.availability === "Free + Premium"
-                  ? "border-amber-300/30 bg-amber-300/10 text-amber-200"
-                  : "border-emerald-300/25 bg-emerald-300/10 text-emerald-200"
-              }`}
+              className={
+                game.availability === "Free / Premium"
+                  ? "text-amber-200"
+                  : "text-emerald-200"
+              }
             >
               {game.availability}
             </span>
-          </div>
-          <h3 className="mt-4 text-2xl font-semibold tracking-tight">{game.name}</h3>
+          </p>
+          <h3 className="mt-3 text-2xl font-semibold tracking-tight">{game.name}</h3>
         </div>
       </div>
     </div>
@@ -121,9 +112,7 @@ const GameCard = ({ game }: { game: Game }) => (
       <ul className="mt-6 space-y-3">
         {game.notes.map((note) => (
           <li key={note} className="flex items-center gap-3 text-sm">
-            <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md border border-primary/30 bg-primary/10 text-primary">
-              <Check className="h-3.5 w-3.5" strokeWidth={3} />
-            </span>
+            <span className="h-px w-5 shrink-0 bg-primary/60" />
             <span>{note}</span>
           </li>
         ))}

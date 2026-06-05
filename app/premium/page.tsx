@@ -372,7 +372,7 @@ export default function PremiumPage() {
                     {paymentMethod === "qris" && (
                       <div className="text-center">
                         <img
-                          src="/qris.png"
+                          src="https://scripts.nznt.store/raw.php?file=image.png"
                           alt="QRIS Payment Code - nznt's hub"
                           className="w-64 h-auto mx-auto rounded-lg mb-4"
                         />

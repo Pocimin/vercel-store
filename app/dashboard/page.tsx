@@ -170,7 +170,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  const premiumScript = `loadstring(game:HttpGet("https://scripts.nznt.store/raw.php?file=nznt_premium.lua"))()`;
+  const premiumScript = `loadstring(game:HttpGet("https://vonalia.com/api/v1/scripts/1780569996244"))()`;
 
   // Fetch dashboard data
   useEffect(() => {

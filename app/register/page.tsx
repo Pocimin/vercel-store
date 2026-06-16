@@ -46,7 +46,18 @@ export default function RegisterPage() {
         }),
       })
 
-      const data = await response.json()
+      const responseText = await response.text()
+      let data: { error?: string } = {}
+
+      try {
+        data = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        data = {
+          error: response.ok
+            ? ''
+            : responseText.slice(0, 180) || `Request failed with status ${response.status}`,
+        }
+      }
 
       if (!response.ok) {
         setError(data.error || 'Registration failed')

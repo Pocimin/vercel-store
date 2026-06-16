@@ -2,16 +2,58 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
 import { applyRateLimit } from '@/lib/rate-limit'
+import { Prisma } from '@prisma/client'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+function registrationErrorResponse(error: unknown) {
+  console.error('Registration error:', error)
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'An account with that email or username already exists.' },
+        { status: 409 }
+      )
+    }
+
+    if (error.code === 'P2021' || error.code === 'P2022') {
+      return NextResponse.json(
+        { error: 'Database schema is out of date. Run the Supabase setup SQL again.' },
+        { status: 500 }
+      )
+    }
+  }
+
+  if (
+    error instanceof Prisma.PrismaClientInitializationError ||
+    error instanceof Prisma.PrismaClientRustPanicError
+  ) {
+    return NextResponse.json(
+      { error: 'Database connection failed. Check DATABASE_URL in Vercel.' },
+      { status: 500 }
+    )
+  }
+
+  return NextResponse.json(
+    { error: 'Internal server error' },
+    { status: 500 }
+  )
+}
 
 export async function POST(request: NextRequest) {
-  // Rate limit: 5 registrations per hour per IP
-  const rateLimitResponse = await applyRateLimit(request, 5, 60 * 60 * 1000)
-  if (rateLimitResponse) return rateLimitResponse
-
   try {
-    const { email, username, password, robloxUsername } = await request.json()
+    // Rate limit: 5 registrations per hour per IP
+    const rateLimitResponse = await applyRateLimit(request, 5, 60 * 60 * 1000)
+    if (rateLimitResponse) return rateLimitResponse
 
-    if (!email || !username || !password) {
+    const { email, username, password, robloxUsername } = await request.json()
+    const normalizedEmail = String(email || '').trim().toLowerCase()
+    const normalizedUsername = String(username || '').trim()
+    const normalizedRobloxUsername = String(robloxUsername || '').trim()
+
+    if (!normalizedEmail || !normalizedUsername || !password) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -19,7 +61,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Input validation
-    if (email.length > 255 || username.length > 50 || password.length < 6 || password.length > 128) {
+    if (
+      normalizedEmail.length > 255 ||
+      normalizedUsername.length > 50 ||
+      password.length < 6 ||
+      password.length > 128 ||
+      normalizedRobloxUsername.length > 50
+    ) {
       return NextResponse.json(
         { error: 'Invalid input length' },
         { status: 400 }
@@ -28,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400 }
@@ -37,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // Username validation (alphanumeric, underscore, hyphen only)
     const usernameRegex = /^[a-zA-Z0-9_-]+$/
-    if (!usernameRegex.test(username)) {
+    if (!usernameRegex.test(normalizedUsername)) {
       return NextResponse.json(
         { error: 'Username can only contain letters, numbers, underscores, and hyphens' },
         { status: 400 }
@@ -47,7 +95,7 @@ export async function POST(request: NextRequest) {
     // Check if user exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ email }, { username }]
+        OR: [{ email: normalizedEmail }, { username: normalizedUsername }]
       }
     })
 
@@ -62,10 +110,10 @@ export async function POST(request: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        email,
-        username,
+        email: normalizedEmail,
+        username: normalizedUsername,
         password: hashedPassword,
-        robloxUsername: robloxUsername || null,
+        robloxUsername: normalizedRobloxUsername || null,
       }
     })
 
@@ -78,10 +126,6 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Registration error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return registrationErrorResponse(error)
   }
 }

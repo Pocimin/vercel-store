@@ -28,6 +28,22 @@ export default function RegisterPage() {
     setIsLoading(true)
     setError('')
 
+    const email = formData.email.trim()
+    const username = formData.username.trim()
+    const robloxUsername = formData.robloxUsername.trim()
+
+    if (!email || !username || !formData.password) {
+      setError('Please fill in all required fields')
+      setIsLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters')
+      setIsLoading(false)
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       setIsLoading(false)
@@ -39,23 +55,29 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: formData.email,
-          username: formData.username,
+          email,
+          username,
           password: formData.password,
-          robloxUsername: formData.robloxUsername,
+          robloxUsername,
         }),
       })
 
       const responseText = await response.text()
+      const contentType = response.headers.get('content-type') || ''
       let data: { error?: string } = {}
 
-      try {
-        data = responseText ? JSON.parse(responseText) : {}
-      } catch {
+      if (contentType.includes('application/json')) {
+        try {
+          data = responseText ? JSON.parse(responseText) : {}
+        } catch {
+          data = { error: `Registration failed with status ${response.status}. Please try again.` }
+        }
+      } else if (!response.ok) {
         data = {
-          error: response.ok
-            ? ''
-            : responseText.slice(0, 180) || `Request failed with status ${response.status}`,
+          error:
+            response.status === 429
+              ? 'Registration is being rate-limited by Vercel protection. Please wait a minute and try again.'
+              : `Registration failed with status ${response.status}. Please try again.`,
         }
       }
 
@@ -142,6 +164,8 @@ export default function RegisterPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="bg-muted border-border"
+                    minLength={6}
+                    maxLength={128}
                     required
                   />
                 </div>
@@ -154,6 +178,8 @@ export default function RegisterPage() {
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     className="bg-muted border-border"
+                    minLength={6}
+                    maxLength={128}
                     required
                   />
                 </div>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Omar - Discord Bio</title>
+  <meta property="og:title" content="Omar - Discord Bio">
+  <meta property="og:description" content="R. Omar">
+  <meta property="og:image" content="assets/profile/profile-picture.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Omar - Discord Bio">
+  <meta name="twitter:description" content="R. Omar">
+
+  <link rel="stylesheet" href="assets/css/profile.css">
+</head>
+
+<body>
+  <div id="glitter-layer" aria-hidden="true"></div>
+  <button id="entry-overlay" class="entry-overlay" type="button">Click anywhere..</button>
+
+  <main class="app-shell" aria-label="Discord style bio">
+    <section class="profile-window">
+      <button class="close-button" type="button" aria-label="Close">x</button>
+
+      <div class="profile-grid">
+        <aside class="profile-card" aria-label="Profile">
+          <div class="profile-banner" aria-hidden="true"></div>
+          <div class="identity">
+            <div class="profile-top">
+              <div class="avatar-wrap">
+                <img
+                  id="avatar"
+                  class="avatar"
+                  src="assets/profile/profile-picture.jpg"
+                  alt="Omar's profile picture">
+                <span id="status-dot" class="status-dot dnd" title="Discord status"></span>
+              </div>
+
+              <span class="custom-status">.gg/nznt</span>
+            </div>
+
+            <h1>Omar</h1>
+            <div class="name-line">
+              <span>R. Omar</span>
+              <span class="separator"></span>
+              <span class="badge">nznt</span>
+            </div>
+
+            <div class="actions" aria-label="Profile links">
+              <a class="primary-action" href="https://wa.me/6287765970055" target="_blank" rel="noreferrer">
+                <img src="assets/profile/whatsapp.svg" alt="">
+                <span>Message Me!</span>
+              </a>
+              <a class="icon-action" href="https://github.com/Pocimin" target="_blank" rel="noreferrer" aria-label="GitHub" data-tip="GitHub">
+                <img src="assets/profile/github.svg" alt="">
+              </a>
+              <a class="icon-action" href="https://www.instagram.com/reinardomar/" target="_blank" rel="noreferrer" aria-label="Instagram" data-tip="Instagram">
+                <img src="assets/profile/instagram.svg" alt="">
+              </a>
+            </div>
+
+            <div class="bio-block">
+              <p>Hi!! My name is R. Omar or Omar for short, I am 15 year old student based in Jakarta.</p>
+              <p>I've had a hobby and passion for computers, I mainly code fun stuff and can fluently code in C++, Lua, Python, and HTML.</p>
+              <p>I specialize in Reverse Engineering. My hobby is to make scripts, cheats and finding exploits for games!</p>
+              <p>I have knowledge in Reversing, mainly using IDA Pro or CE</p>
+              <p>Nice to know you!</p>
+            </div>
+
+            <dl class="detail-list">
+              <div>
+                <dt>Member Since</dt>
+                <dd>23 March 2011</dd>
+              </div>
+              <div>
+                <dt>Discord Status</dt>
+                <dd id="status-text">Connecting...</dd>
+              </div>
+            </dl>
+          </div>
+        </aside>
+
+        <section class="board" aria-label="Profile widgets">
+          <nav class="tabs" aria-label="Profile tabs">
+            <a class="active" href="#">Board</a>
+            <a href="#">Activity</a>
+            <a href="#">Wishlist</a>
+          </nav>
+
+          <div class="board-head">
+            <h2>Your Widgets</h2>
+            <button type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M11 5h2v14h-2zM5 11h14v2H5z" />
+              </svg>
+              Add Widget
+            </button>
+          </div>
+
+          <article class="widget favorite-widget">
+            <div>
+              <h3>Favorite game</h3>
+              <p>Choose 1 game</p>
+            </div>
+            <div class="favorite-content">
+              <a class="game-tile favorite-tile" href="#" aria-label="Geometry Dash">
+                <img src="assets/profile/geometry-dash.jpg" alt="">
+                <span>Geometry Dash</span>
+              </a>
+              <div>
+                <strong>Geometry Dash</strong>
+                <span>I dedicated my life to this game</span>
+                <small>4,500+ Hours</small>
+              </div>
+            </div>
+          </article>
+
+          <article class="widget creations-widget">
+            <div class="widget-title-row">
+              <div>
+                <h3>My Creations</h3>
+                <p>Projects and things I made</p>
+              </div>
+              <button type="button" aria-label="Add creation">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M11 5h2v14h-2zM5 11h14v2H5z" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="game-strip">
+              <a class="game-tile" href="https://discord.gg/nznt" target="_blank" rel="noreferrer" aria-label="nznt's hub">
+                <span class="tile-media"><img src="assets/profile/my-logo-edited.png" alt=""></span>
+                <span>nznt's hub</span>
+              </a>
+              <a class="game-tile" href="https://nznt.store/" target="_blank" rel="noreferrer" aria-label="nznt's scripts">
+                <span class="tile-media"><img src="assets/profile/my-logo-edited.png" alt=""></span>
+                <span>nznt's scripts</span>
+              </a>
+              <a class="game-tile" href="https://github.com/Pocimin" target="_blank" rel="noreferrer" aria-label="Rise V2">
+                <span class="tile-media"><img src="assets/profile/rise-v2-user-attachment.png" alt=""></span>
+                <span>Rise V2</span>
+              </a>
+              <a class="game-tile website-tile" href="./" aria-label="This website">
+                <span class="tile-media website-art">&lt;/&gt;</span>
+                <span>This website</span>
+              </a>
+            </div>
+          </article>
+
+          <section class="music-card widget" aria-label="Music player">
+            <div class="music-head">
+              <span>Listening to Spotify</span>
+              <img src="assets/profile/spotify.svg" alt="">
+              <button id="music-menu" type="button" aria-label="More music options">...</button>
+            </div>
+            <div class="music-body">
+              <img src="assets/profile/laufey-cover.jpg" alt="Let You Break My Heart Again cover art">
+              <div class="track-info">
+                <strong>Let You Break My Heart Again</strong>
+                <span>Laufey, Philharmonia Orchestra</span>
+                <div class="player-row">
+                  <button id="play-button" class="play-button" type="button" aria-label="Play music">
+                    <img id="play-icon" src="assets/profile/play-fill.svg" alt="">
+                  </button>
+                  <span id="current-time">0:00</span>
+                  <div class="progress-track" role="progressbar" aria-label="Song progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <span id="progress-fill"></span>
+                  </div>
+                  <span>4:29</span>
+                </div>
+              </div>
+            </div>
+            <audio id="track" preload="auto" loop src="assets/profile/laufey-preview.m4a"></audio>
+          </section>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/profile.js"></script>
+</body>
+
+</html>

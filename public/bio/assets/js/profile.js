@@ -109,6 +109,49 @@ function setupEntryOverlay(player) {
   overlay.addEventListener("click", enter, { once: true });
 }
 
+function normalizeAnswer(value) {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+async function sha256(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function setupProtectedLinks() {
+  const expectedHash = "9d0130de0b82226f1409a06c5342318a7e837c2192dd76005c3abf1c72bbf3af";
+  const overlay = document.getElementById("access-overlay");
+  const form = document.getElementById("access-form");
+  const input = document.getElementById("access-answer");
+  let pendingUrl = "";
+
+  document.querySelectorAll(".protected-link").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      pendingUrl = link.href;
+      overlay.classList.add("is-visible");
+      overlay.setAttribute("aria-hidden", "false");
+      input.value = "";
+      window.setTimeout(() => input.focus(), 40);
+    });
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const answerHash = await sha256(normalizeAnswer(input.value));
+
+    if (answerHash === expectedHash && pendingUrl) {
+      window.location.href = pendingUrl;
+      return;
+    }
+
+    window.location.reload();
+  });
+}
+
 function setupCursorGlitter() {
   const layer = document.getElementById("glitter-layer");
   const colors = ["#ffffff", "#b7c8ff", "#a7f3d0", "#f0abfc", "#fde68a"];
@@ -160,5 +203,6 @@ function setupTiltEffect() {
 loadDiscordStatus();
 window.setInterval(loadDiscordStatus, 30000);
 setupEntryOverlay(setupMusicPlayer());
+setupProtectedLinks();
 setupCursorGlitter();
 setupTiltEffect();

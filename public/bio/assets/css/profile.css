@@ -807,6 +807,66 @@ h1 {
   visibility: hidden;
 }
 
+.access-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 5, 8, 0.74);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 180ms ease, visibility 180ms ease;
+}
+
+.access-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.access-card {
+  width: min(360px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #242328;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.38);
+}
+
+.access-card label {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.access-card input {
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  outline: none;
+  padding: 0 12px;
+  background: #1b1a1f;
+  color: var(--text);
+}
+
+.access-card input:focus {
+  border-color: #5865f2;
+}
+
+.access-card button {
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--button);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
 #glitter-layer {
   position: fixed;
   inset: 0;
@@ -834,14 +894,20 @@ h1 {
 }
 
 @media (max-width: 900px) {
+  .app-shell {
+    padding: 4px;
+  }
+
   .profile-window {
-    width: 100%;
+    width: min(100%, calc(100vw - 8px));
     min-height: 100vh;
     border-radius: 0;
   }
 
   .profile-grid {
     grid-template-columns: 1fr;
+    padding: 20px 12px 28px;
+    gap: 20px;
   }
 
   .profile-card {
@@ -849,13 +915,17 @@ h1 {
   }
 
   .board {
-    padding: 26px 24px 34px;
+    padding: 22px 8px 34px;
   }
 }
 
 @media (max-width: 560px) {
   .identity {
-    padding: 42px 22px 28px;
+    padding: 42px 16px 28px;
+  }
+
+  .profile-grid {
+    padding: 12px 6px 24px;
   }
 
   .custom-status {

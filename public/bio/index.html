@@ -19,6 +19,13 @@
 <body>
   <div id="glitter-layer" aria-hidden="true"></div>
   <button id="entry-overlay" class="entry-overlay" type="button">Click anywhere..</button>
+  <div id="access-overlay" class="access-overlay" aria-hidden="true">
+    <form id="access-form" class="access-card">
+      <label for="access-answer">What's my full irl name?</label>
+      <input id="access-answer" name="answer" type="text" autocomplete="off" spellcheck="false" required>
+      <button type="submit">Continue</button>
+    </form>
+  </div>
 
   <main class="app-shell" aria-label="Discord style bio">
     <section class="profile-window">
@@ -49,14 +56,14 @@
             </div>
 
             <div class="actions" aria-label="Profile links">
-              <a class="primary-action" href="https://wa.me/6287765970055" target="_blank" rel="noreferrer">
+              <a class="primary-action protected-link" href="https://wa.me/6287765970055" target="_blank" rel="noreferrer">
                 <img src="assets/profile/whatsapp.svg" alt="">
                 <span>Message Me!</span>
               </a>
               <a class="icon-action" href="https://github.com/Pocimin" target="_blank" rel="noreferrer" aria-label="GitHub" data-tip="GitHub">
                 <img src="assets/profile/github.svg" alt="">
               </a>
-              <a class="icon-action" href="https://www.instagram.com/reinardomar/" target="_blank" rel="noreferrer" aria-label="Instagram" data-tip="Instagram">
+              <a class="icon-action protected-link" href="https://www.instagram.com/reinardomar/" target="_blank" rel="noreferrer" aria-label="Instagram" data-tip="Instagram">
                 <img src="assets/profile/instagram.svg" alt="">
               </a>
             </div>

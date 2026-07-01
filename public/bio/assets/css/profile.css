@@ -53,7 +53,7 @@ body {
   color: var(--text);
   background:
     linear-gradient(rgba(9, 8, 12, 0.52), rgba(9, 8, 12, 0.58)),
-    url("../images/star.gif") center / cover fixed,
+    url("/bio/assets/images/star.gif") center / cover fixed,
     var(--page);
   font-family: "gg sans", Whitney, "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;

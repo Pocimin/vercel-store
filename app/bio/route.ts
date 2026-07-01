@@ -14,7 +14,7 @@ export async function GET() {
   return new Response(html, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "no-store, max-age=0",
     },
   });
 }

@@ -13,7 +13,7 @@
   <meta name="twitter:title" content="Omar - Discord Bio">
   <meta name="twitter:description" content="R. Omar">
 
-  <link rel="stylesheet" href="/bio/assets/css/profile.20260701.css">
+  <link rel="stylesheet" href="/bio/assets/css/profile.20260701-secure.css">
   <style>
     .access-overlay {
       position: fixed;
@@ -77,8 +77,9 @@
   <div id="glitter-layer" aria-hidden="true"></div>
   <button id="entry-overlay" class="entry-overlay" type="button">Click anywhere..</button>
   <div id="access-overlay" class="access-overlay" aria-hidden="true">
-    <form id="access-form" class="access-card">
+    <form id="access-form" class="access-card" action="/api/unlock" method="post">
       <label for="access-answer">What's my full irl name?</label>
+      <input id="access-target" name="target" type="hidden">
       <input id="access-answer" name="answer" type="text" autocomplete="off" spellcheck="false" required>
       <button type="submit">Continue</button>
     </form>
@@ -113,14 +114,14 @@
             </div>
 
             <div class="actions" aria-label="Profile links">
-              <a class="primary-action protected-link" href="https://wa.me/6287765970055" target="_blank" rel="noreferrer">
+              <a class="primary-action protected-link" href="#" data-target="whatsapp">
                 <img src="/bio/assets/profile/whatsapp.svg" alt="">
                 <span>Message Me!</span>
               </a>
               <a class="icon-action" href="https://github.com/Pocimin" target="_blank" rel="noreferrer" aria-label="GitHub" data-tip="GitHub">
                 <img src="/bio/assets/profile/github.svg" alt="">
               </a>
-              <a class="icon-action protected-link" href="https://www.instagram.com/reinardomar/" target="_blank" rel="noreferrer" aria-label="Instagram" data-tip="Instagram">
+              <a class="icon-action protected-link" href="#" data-target="instagram" aria-label="Instagram" data-tip="Instagram">
                 <img src="/bio/assets/profile/instagram.svg" alt="">
               </a>
             </div>
@@ -244,7 +245,7 @@
     </section>
   </main>
 
-  <script src="/bio/assets/js/profile.20260701.js"></script>
+  <script src="/bio/assets/js/profile.20260701-secure.js"></script>
 </body>
 
 </html>

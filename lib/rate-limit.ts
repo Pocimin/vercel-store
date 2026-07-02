@@ -26,7 +26,7 @@ export interface RateLimitConfig {
 
 export function rateLimit(config: RateLimitConfig) {
   return {
-    check: async (request: NextRequest, limit: number, token: string) => {
+    check: async (_request: NextRequest, limit: number, token: string) => {
       const now = Date.now()
       const tokenData = store[token]
 
@@ -49,6 +49,40 @@ export function rateLimit(config: RateLimitConfig) {
       return { success: true }
     },
   }
+}
+
+export async function applyTokenRateLimit(
+  token: string,
+  limit: number,
+  interval: number
+): Promise<NextResponse | null> {
+  const now = Date.now()
+  const key = token || 'unknown'
+  const tokenData = store[key]
+
+  if (!tokenData || tokenData.resetTime < now) {
+    store[key] = { count: 1, resetTime: now + interval }
+    return null
+  }
+
+  if (tokenData.count < limit) {
+    tokenData.count += 1
+    return null
+  }
+
+  const retryAfter = Math.ceil((tokenData.resetTime - now) / 1000)
+  return NextResponse.json(
+    { error: 'Too many requests. Please try again later.', retryAfter },
+    {
+      status: 429,
+      headers: {
+        'Retry-After': String(retryAfter),
+        'X-RateLimit-Limit': String(limit),
+        'X-RateLimit-Remaining': '0',
+        'X-RateLimit-Reset': String(tokenData.resetTime),
+      },
+    }
+  )
 }
 
 export function getClientIdentifier(request: NextRequest): string {

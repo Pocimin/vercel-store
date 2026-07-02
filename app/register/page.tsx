@@ -21,7 +21,9 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     robloxUsername: '',
+    website: '',
   })
+  const [formStartedAt] = useState(() => Date.now())
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,6 +61,8 @@ export default function RegisterPage() {
           username,
           password: formData.password,
           robloxUsername,
+          website: formData.website,
+          formStartedAt,
         }),
       })
 
@@ -122,6 +126,16 @@ export default function RegisterPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  className="hidden"
+                  aria-hidden="true"
+                />
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input

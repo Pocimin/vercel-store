@@ -114,11 +114,13 @@ function setupProtectedLinks() {
   const form = document.getElementById("access-form");
   const input = document.getElementById("access-answer");
   const targetInput = document.getElementById("access-target");
+  const error = document.getElementById("access-error");
 
   document.querySelectorAll(".protected-link").forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
       targetInput.value = link.dataset.target || "";
+      error.textContent = "";
       overlay.classList.add("is-visible");
       overlay.setAttribute("aria-hidden", "false");
       input.value = "";
@@ -130,15 +132,20 @@ function setupProtectedLinks() {
     event.preventDefault();
     const button = form.querySelector("button");
     button.disabled = true;
+    error.textContent = "";
     try {
       const response = await fetch("https://api.nznt.store/bio/unlock", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ target: targetInput.value, answer: input.value }),
       });
-      const result = await response.json();
-      window.location.assign(result?.data?.url || "/bio");
-    } catch {
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result?.data?.url) {
+        throw new Error(result?.error?.message || "That answer is not correct.");
+      }
+      window.location.replace(result.data.url);
+    } catch (caught) {
+      error.textContent = caught instanceof Error ? caught.message : "Unable to verify right now.";
       button.disabled = false;
     }
   });

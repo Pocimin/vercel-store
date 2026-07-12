@@ -1,7 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { env } from "../env.js";
 
 const accessHashes = new Set([
   "9d0130de0b82226f1409a06c5342318a7e837c2192dd76005c3abf1c72bbf3af",
@@ -36,11 +35,18 @@ function hasAccess(answer: string) {
 export async function registerBioRoutes(app: FastifyInstance) {
   app.post("/bio/unlock", {
     config: { rateLimit: { max: 5, timeWindow: "15 minutes" } }
-  }, async (request) => {
+  }, async (request, reply) => {
     const input = unlockSchema.parse(request.body);
+    if (!hasAccess(input.answer)) {
+      return reply.status(403).send({
+        ok: false,
+        error: { code: "INVALID_ACCESS", message: "That answer is not correct." }
+      });
+    }
+
     return {
       ok: true,
-      data: { url: hasAccess(input.answer) ? destinations[input.target] : `${env.PUBLIC_WEB_URL}/bio` },
+      data: { url: destinations[input.target] },
     };
   });
 }

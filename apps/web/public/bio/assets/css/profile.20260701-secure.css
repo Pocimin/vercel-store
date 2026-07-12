@@ -57,6 +57,9 @@ body {
     var(--page);
   font-family: "gg sans", Whitney, "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
+  font-stretch: normal;
+  letter-spacing: normal;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -404,6 +407,15 @@ h1 {
   line-height: 1.42;
 }
 
+.bio-block a {
+  color: #00aff4;
+}
+
+.bio-block a:hover,
+.bio-block a:focus-visible {
+  text-decoration: underline;
+}
+
 .detail-list {
   display: grid;
   gap: 22px;
@@ -582,6 +594,75 @@ h1 {
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-top: 12px;
+}
+
+.creation-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.creation-card {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--widget);
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.creation-card:hover,
+.creation-card:focus-visible {
+  background: #323338;
+  transform: translateY(-1px);
+}
+
+.creation-media {
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #18191c;
+}
+
+.creation-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.creation-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.creation-copy strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.creation-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+}
+
+.creation-more {
+  align-self: start;
+  padding: 4px 2px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
 }
 
 .game-tile {

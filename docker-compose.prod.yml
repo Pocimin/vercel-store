@@ -1,0 +1,93 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nznt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-nznt_platform}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nznt} -d ${POSTGRES_DB:-nznt_platform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+
+  api:
+    build: .
+    restart: unless-stopped
+    command: ["node", "apps/api/dist/server.js"]
+    env_file: .env
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 4400
+      SCRIPT_RAW_ROOT: /app/storage/raw
+      SCRIPT_ARTIFACT_ROOT: /app/storage/builds
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - script_storage:/app/storage
+    ports:
+      - "127.0.0.1:4400:4400"
+
+  web:
+    build:
+      context: .
+      args:
+        VITE_API_URL: ${PUBLIC_API_URL}
+        VITE_TURNSTILE_SITE_KEY: ${PUBLIC_TURNSTILE_SITE_KEY}
+    restart: unless-stopped
+    command: ["pnpm", "--filter", "@nznt/web", "preview"]
+    env_file: .env
+    environment:
+      VITE_API_URL: ${PUBLIC_API_URL}
+      VITE_TURNSTILE_SITE_KEY: ${PUBLIC_TURNSTILE_SITE_KEY}
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3300:3000"
+
+  worker:
+    build: .
+    restart: unless-stopped
+    command: ["node", "apps/worker/dist/worker.js"]
+    env_file: .env
+    environment:
+      SCRIPT_RAW_ROOT: /app/storage/raw
+      SCRIPT_ARTIFACT_ROOT: /app/storage/builds
+      PROMETHEUS_ROOT: /app/Prometheus-master
+      PROMETHEUS_PRESET: ${PROMETHEUS_PRESET:-Medium}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - script_storage:/app/storage
+      - ../Prometheus-master:/app/Prometheus-master:ro
+      - /root/nznt/database.json:/app/legacy/database.json:ro
+
+  bot:
+    build: .
+    restart: unless-stopped
+    command: ["node", "apps/bot/dist/bot.js"]
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  script_storage:

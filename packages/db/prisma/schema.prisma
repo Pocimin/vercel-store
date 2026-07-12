@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  SUPPORT
+  ADMIN
+  OWNER
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum LicenseStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  REVOKED
+}
+
+enum LicenseSource {
+  WEBSITE
+  DISCORD
+  ADMIN
+  IMPORT
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
+enum SessionStatus {
+  ACTIVE
+  KICK_REQUESTED
+  STOPPED
+  EXPIRED
+}
+
+enum ScriptBuildStatus {
+  QUEUED
+  BUILDING
+  PUBLISHED
+  FAILED
+}
+
+model User {
+  id              String        @id @default(cuid())
+  email           String?       @unique
+  username        String?       @unique
+  displayName     String?
+  passwordHash    String?
+  discordId       String?       @unique
+  robloxUsername  String?
+  monitoringCodeHash String?    @unique
+  monitoringCodePreview String?
+  monitoringCodeCiphertext String?
+  role            UserRole      @default(USER)
+  status          AccountStatus @default(ACTIVE)
+  twoFactorSecret String?
+  twoFactorEnabled Boolean      @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  licenses        License[]
+  devices         Device[]
+  sessions        ScriptSession[]
+  payments        Payment[]
+  auditLogs       AuditLog[]     @relation("ActorAuditLogs")
+
+  @@index([role])
+  @@index([status])
+}
+
+model License {
+  id             String        @id @default(cuid())
+  userId         String?
+  keyHash        String        @unique
+  keyPreview     String
+  keyCiphertext  String?
+  providerUserCiphertext String?
+  plan           String
+  status         LicenseStatus @default(ACTIVE)
+  source         LicenseSource @default(ADMIN)
+  maxDevices     Int           @default(1)
+  expiresAt      DateTime?
+  createdById    String?
+  suspendedAt    DateTime?
+  suspendReason  String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  devices        Device[]
+  sessions       ScriptSession[]
+  payments       Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model Device {
+  id             String   @id @default(cuid())
+  userId         String?
+  licenseId      String?
+  hwidHash       String
+  ipHash         String?
+  robloxUserId   String?
+  robloxUsername String?
+  executor       String?
+  trustScore     Int      @default(100)
+  firstSeenAt    DateTime @default(now())
+  lastSeenAt     DateTime @default(now())
+
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  license        License? @relation(fields: [licenseId], references: [id], onDelete: SetNull)
+  sessions       ScriptSession[]
+
+  @@unique([licenseId, hwidHash])
+  @@index([userId])
+  @@index([hwidHash])
+  @@index([ipHash])
+}
+
+model Script {
+  id              String        @id @default(cuid())
+  fileName        String        @unique
+  game            String
+  type            String
+  channel         String        @default("stable")
+  activeBuildId   String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  builds          ScriptBuild[]
+  sessions        ScriptSession[]
+
+  @@index([game])
+  @@index([channel])
+}
+
+model ScriptBuild {
+  id              String            @id @default(cuid())
+  scriptId        String
+  version         String
+  status          ScriptBuildStatus @default(QUEUED)
+  sourcePath      String
+  obfuscatedPath  String?
+  checksum        String?
+  obfuscator      String?
+  error           String?
+  publishedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  script          Script            @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+
+  @@unique([scriptId, version])
+  @@index([status])
+}
+
+model ScriptSession {
+  id              String        @id @default(cuid())
+  userId          String?
+  licenseId       String?
+  deviceId        String?
+  scriptId        String?
+  status          SessionStatus @default(ACTIVE)
+  game            String?
+  executor        String?
+  scriptVersion   String?
+  ipHash          String?
+  hwidHash        String?
+  startedAt       DateTime      @default(now())
+  lastSeenAt      DateTime      @default(now())
+  kickedAt        DateTime?
+  kickReason      String?
+  stoppedAt       DateTime?
+
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  license         License?      @relation(fields: [licenseId], references: [id], onDelete: SetNull)
+  device          Device?       @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  script          Script?       @relation(fields: [scriptId], references: [id], onDelete: SetNull)
+  events          ScriptEvent[]
+
+  @@index([status])
+  @@index([lastSeenAt])
+  @@index([licenseId])
+}
+
+model ScriptEvent {
+  id              String        @id @default(cuid())
+  sessionId       String
+  type            String
+  payload         Json?
+  createdAt       DateTime      @default(now())
+
+  session         ScriptSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  userId          String?
+  licenseId       String?
+  plan            String
+  method          String
+  amount          Int
+  currency        String        @default("IDR")
+  proofUrl        String?
+  status          PaymentStatus @default(PENDING)
+  discordMessageId String?
+  processedById   String?
+  processedAt     DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  license         License?      @relation(fields: [licenseId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([userId])
+}
+
+model BotTicket {
+  id                 String    @id @default(cuid())
+  discordChannelId   String    @unique
+  creatorDiscordId   String
+  type               String
+  status             String    @default("open")
+  claimedByDiscordId String?
+  createdAt          DateTime  @default(now())
+  closedAt           DateTime?
+
+  @@index([creatorDiscordId])
+  @@index([status])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorType   String
+  actorId     String?
+  action      String
+  targetType  String?
+  targetId    String?
+  ipHash      String?
+  payload     Json?
+  createdAt   DateTime @default(now())
+
+  actor       User?    @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}

@@ -4,6 +4,7 @@ import { QrCode, Wallet, Gamepad2, Upload, ExternalLink } from "lucide-react";
 import { Nav, Footer } from "./index";
 import { api, json, me, type User } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { AuthPanel } from "@/components/AuthPanel";
 import qrisImage from "@/assets/qris.png";
 
 export const Route = createFileRoute("/purchase")({
@@ -217,13 +218,7 @@ function PurchasePage() {
               Signed in as <span className="font-bold">{user.displayName ?? user.email ?? user.username}</span>
             </div>
           ) : (
-            <div className="rounded-xl border border-white/10 bg-[#141414] p-6">
-              <p className="text-sm text-muted-foreground">Register or sign in before submitting your payment proof.</p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <a href="/register" className="rounded-full bg-[#f3efe7] px-5 py-3 text-sm font-bold text-[#111]">Register first</a>
-                <a href="/login" className="rounded-full border border-white/10 px-5 py-3 text-sm font-bold text-foreground">Sign in</a>
-              </div>
-            </div>
+            <AuthPanel initialMode="register" onDone={(nextUser) => setUser(nextUser)} />
           )}
           <div className="mt-5">
             <div className="text-sm font-semibold text-foreground">{t("uploadProof")}</div>
@@ -268,4 +263,3 @@ function PurchasePage() {
     </div>
   );
 }
-

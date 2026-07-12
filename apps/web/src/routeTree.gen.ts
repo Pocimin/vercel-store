@@ -10,8 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as BioRouteImport } from './routes/bio'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as PurchaseRouteImport } from './routes/purchase'
 import { Route as FreeRouteImport } from './routes/free'
@@ -22,16 +20,6 @@ import { Route as IndexRouteImport } from './routes/index'
 const RedeemRoute = RedeemRouteImport.update({
   id: '/redeem',
   path: '/redeem',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BioRoute = BioRouteImport.update({
@@ -67,8 +55,6 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/bio': typeof BioRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/dashboard': typeof DashboardRoute
@@ -78,8 +64,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/bio': typeof BioRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/dashboard': typeof DashboardRoute
@@ -95,8 +79,6 @@ export interface FileRoutesById {
   '/free': typeof FreeRoute
   '/purchase': typeof PurchaseRoute
   '/redeem': typeof RedeemRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
   '/bio': typeof BioRoute
 }
 export interface FileRouteTypes {
@@ -107,10 +89,8 @@ export interface FileRouteTypes {
     | '/bio'
     | '/dashboard'
     | '/free'
-    | '/login'
     | '/purchase'
     | '/redeem'
-    | '/register'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -118,10 +98,8 @@ export interface FileRouteTypes {
     | '/bio'
     | '/dashboard'
     | '/free'
-    | '/login'
     | '/purchase'
     | '/redeem'
-    | '/register'
   id:
     | '__root__'
     | '/'
@@ -129,17 +107,13 @@ export interface FileRouteTypes {
     | '/bio'
     | '/dashboard'
     | '/free'
-    | '/login'
     | '/purchase'
     | '/redeem'
-    | '/register'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BioRoute: typeof BioRoute
-  LoginRoute: typeof LoginRoute
-  RegisterRoute: typeof RegisterRoute
   AdminRoute: typeof AdminRoute
   DashboardRoute: typeof DashboardRoute
   FreeRoute: typeof FreeRoute
@@ -161,20 +135,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/redeem': {
@@ -218,8 +178,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BioRoute: BioRoute,
-  LoginRoute: LoginRoute,
-  RegisterRoute: RegisterRoute,
   AdminRoute: AdminRoute,
   DashboardRoute: DashboardRoute,
   FreeRoute: FreeRoute,
@@ -239,4 +197,3 @@ declare module '@tanstack/react-start' {
     config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }
-

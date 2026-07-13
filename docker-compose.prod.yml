@@ -30,7 +30,7 @@ services:
     security_opt: ["no-new-privileges:true"]
     pids_limit: 256
     mem_limit: 768m
-    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m", "/app/apps/web/node_modules/.vite-temp:rw,noexec,nosuid,size=16m"]
     command: ["node", "apps/api/dist/server.js"]
     env_file: .env
     environment:
@@ -62,7 +62,7 @@ services:
     pids_limit: 128
     mem_limit: 512m
     tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
-    command: ["pnpm", "--filter", "@nznt/web", "preview"]
+    command: ["node", "apps/web/server.mjs"]
     env_file: .env
     environment:
       VITE_API_URL: ${PUBLIC_API_URL}

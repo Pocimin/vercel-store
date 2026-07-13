@@ -6,6 +6,7 @@ import { ScriptBuildStatus, SessionStatus, UserRole, db } from "@nznt/db";
 import { assertServiceToken } from "@nznt/auth";
 import { env } from "../env.js";
 import { getCurrentUser } from "../lib/session.js";
+import { requireBrowserRequest } from "../lib/csrf.js";
 
 function requireServiceToken(request: FastifyRequest) {
   const header = request.headers.authorization;
@@ -113,7 +114,7 @@ export async function registerAdminRoutes(app: FastifyInstance) {
     return { ok: true, data: scripts };
   });
 
-  app.post("/admin/scripts/upload", async (request, reply) => {
+  app.post("/admin/scripts/upload", { preHandler: requireBrowserRequest }, async (request, reply) => {
     const input = scriptUploadSchema.parse(request.body);
     const script = await db.script.upsert({
       where: { fileName: input.fileName },
@@ -183,7 +184,7 @@ export async function registerAdminRoutes(app: FastifyInstance) {
     });
   });
 
-  app.post<{ Params: { id: string }; Body: { reason?: string } }>("/admin/sessions/:id/kick", async (request) => {
+  app.post<{ Params: { id: string }; Body: { reason?: string } }>("/admin/sessions/:id/kick", { preHandler: requireBrowserRequest }, async (request) => {
     const session = await db.scriptSession.update({
       where: { id: request.params.id },
       data: {

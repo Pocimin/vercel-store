@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { AccountStatus, LicenseStatus, SessionStatus, db } from "@nznt/db";
-import { hashSecret, previewSecret } from "@nznt/auth";
+import { assertServiceToken, hashSecret, previewSecret } from "@nznt/auth";
 import {
   scriptEventSchema,
   scriptHandshakeSchema,
@@ -10,6 +10,8 @@ import {
 import { env } from "../env.js";
 
 export async function registerScriptRoutes(app: FastifyInstance) {
+  const getSessionToken = (sessionId: string) => hashSecret(sessionId, env.SCRIPT_SIGNING_SECRET);
+
   const staleSessionTimer = setInterval(() => {
     void db.scriptSession.updateMany({
       where: { status: SessionStatus.ACTIVE, lastSeenAt: { lt: new Date(Date.now() - 60_000) } },
@@ -49,7 +51,7 @@ export async function registerScriptRoutes(app: FastifyInstance) {
     const session = await db.scriptSession.create({
       data: { userId: user.id, deviceId: device.id, scriptId: script.id, game: input.game ?? null, executor: input.executor ?? null, scriptVersion: input.scriptVersion ?? null, ipHash, hwidHash }
     });
-    return reply.send({ ok: true, data: { allowed: true, sessionId: session.id, heartbeatIntervalSeconds: 30, config: {} } });
+    return reply.send({ ok: true, data: { allowed: true, sessionId: session.id, sessionToken: getSessionToken(session.id), heartbeatIntervalSeconds: 30, config: {} } });
   });
 
   app.post("/script/handshake", {
@@ -183,6 +185,7 @@ export async function registerScriptRoutes(app: FastifyInstance) {
       data: {
         allowed: true,
         sessionId: session.id,
+        sessionToken: getSessionToken(session.id),
         heartbeatIntervalSeconds: 30,
         config: {}
       }
@@ -191,9 +194,12 @@ export async function registerScriptRoutes(app: FastifyInstance) {
 
   app.post("/script/heartbeat", async (request, reply) => {
     const input = scriptHeartbeatSchema.parse(request.body);
+    const current = await db.scriptSession.findUnique({ where: { id: input.sessionId } });
+    if (!current || !assertServiceToken(input.sessionToken, getSessionToken(current.id))) {
+      return reply.status(403).send({ ok: false, error: { code: "SESSION_DENIED", message: "Session is invalid" } });
+    }
 
     const session = await db.$transaction(async (tx) => {
-      const current = await tx.scriptSession.findUniqueOrThrow({ where: { id: input.sessionId } });
       const updated = await tx.scriptSession.update({
         where: { id: input.sessionId },
         data: {
@@ -227,6 +233,11 @@ export async function registerScriptRoutes(app: FastifyInstance) {
 
   app.post("/script/event", async (request, reply) => {
     const input = scriptEventSchema.parse(request.body);
+    const session = await db.scriptSession.findUnique({ where: { id: input.sessionId } });
+    if (!session || !assertServiceToken(input.sessionToken, getSessionToken(session.id))) {
+      return reply.status(403).send({ ok: false, error: { code: "SESSION_DENIED", message: "Session is invalid" } });
+    }
+
     await db.scriptEvent.create({
       data: {
         sessionId: input.sessionId,
@@ -238,4 +249,3 @@ export async function registerScriptRoutes(app: FastifyInstance) {
     return reply.send({ ok: true, data: { recorded: true } });
   });
 }
-

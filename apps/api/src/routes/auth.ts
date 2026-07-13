@@ -37,7 +37,7 @@ const authRateLimit = { config: { rateLimit: { max: 10, timeWindow: "1 minute" }
 export async function registerAuthRoutes(app: FastifyInstance) {
   const decoyPasswordHash = await hashPassword(randomBytes(24).toString("hex"));
 
-  app.post("/auth/register", authRateLimit, async (request, reply) => {
+  app.post("/auth/register", { ...authRateLimit, preHandler: requireBrowserRequest }, async (request, reply) => {
     const input = registerSchema.parse(request.body);
     if (!(await verifyTurnstile(input.turnstileToken, request.ip))) {
       return reply.status(400).send({ ok: false, error: { code: "CAPTCHA_FAILED", message: "Captcha verification failed" } });
@@ -77,7 +77,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     return reply.status(201).send({ ok: true, data: { user: sanitizeUser(user) } });
   });
 
-  app.post("/auth/login", authRateLimit, async (request, reply) => {
+  app.post("/auth/login", { ...authRateLimit, preHandler: requireBrowserRequest }, async (request, reply) => {
     const input = loginSchema.parse(request.body);
     if (!(await verifyTurnstile(input.turnstileToken, request.ip))) {
       return reply.status(400).send({ ok: false, error: { code: "CAPTCHA_FAILED", message: "Captcha verification failed" } });
@@ -255,7 +255,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     return { ok: true, data: { user: sanitizeUser(user) } };
   });
 
-  app.post("/auth/admin/2fa/setup", async (request, reply) => {
+  app.post("/auth/admin/2fa/setup", { preHandler: requireBrowserRequest }, async (request, reply) => {
     const user = await requireAdminUser(request, reply);
     if (!user) return;
 
@@ -276,7 +276,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     };
   });
 
-  app.post<{ Body: { code?: string } }>("/auth/admin/2fa/enable", async (request, reply) => {
+  app.post<{ Body: { code?: string } }>("/auth/admin/2fa/enable", { preHandler: requireBrowserRequest }, async (request, reply) => {
     const user = await requireAdminUser(request, reply);
     if (!user) return;
     if (!user.twoFactorSecret || !request.body?.code || !authenticator.check(request.body.code, user.twoFactorSecret)) {

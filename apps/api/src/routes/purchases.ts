@@ -234,7 +234,7 @@ export async function registerPurchaseRoutes(app: FastifyInstance) {
     return { ok: true, data: { payments } };
   });
 
-  app.post<{ Params: { id: string } }>("/admin/payments/:id/approve", async (request, reply) => {
+  app.post<{ Params: { id: string } }>("/admin/payments/:id/approve", { preHandler: requireBrowserRequest }, async (request, reply) => {
     const admin = await requireAdminUser(request, reply);
     if (!admin) return;
 
@@ -310,7 +310,7 @@ export async function registerPurchaseRoutes(app: FastifyInstance) {
     return { ok: true, data: { ...result, plainKey } };
   });
 
-  app.post<{ Params: { id: string } }>("/admin/payments/:id/reject", async (request, reply) => {
+  app.post<{ Params: { id: string } }>("/admin/payments/:id/reject", { preHandler: requireBrowserRequest }, async (request, reply) => {
     const admin = await requireAdminUser(request, reply);
     if (!admin) return;
     const payment = await db.payment.update({

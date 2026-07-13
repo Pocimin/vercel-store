@@ -49,7 +49,7 @@ export async function buildHttpServer() {
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);
-    if (error instanceof ZodError) {
+    if (isValidationError(error)) {
       return reply.status(400).send({
         ok: false,
         error: { code: "INVALID_REQUEST", message: "Request body is invalid" }
@@ -68,4 +68,9 @@ export async function buildHttpServer() {
   });
 
   return app;
+}
+
+function isValidationError(error: unknown): boolean {
+  return error instanceof ZodError
+    || (typeof error === "object" && error !== null && Array.isArray((error as { issues?: unknown }).issues));
 }

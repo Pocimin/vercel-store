@@ -234,7 +234,8 @@ svg {
   content: "";
   position: absolute;
   left: -9px;
-  top: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 16px;
   height: 16px;
   border-radius: 50%;

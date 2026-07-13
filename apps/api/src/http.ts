@@ -27,10 +27,7 @@ export async function buildHttpServer() {
   });
 
   await app.register(cors, {
-    origin: (origin, callback) => {
-      const allowed = new Set([env.PUBLIC_WEB_URL, "https://nznt.store", "https://www.nznt.store"]);
-      callback(null, !origin || allowed.has(origin));
-    },
+    origin: [env.PUBLIC_WEB_URL, "https://nznt.store", "https://www.nznt.store"],
     credentials: true
   });
 

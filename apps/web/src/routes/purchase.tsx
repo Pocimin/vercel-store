@@ -75,6 +75,15 @@ function PurchasePage() {
   }, []);
 
   function readProof(file: File) {
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      setError("Proof must be a PNG, JPEG, or WebP image.");
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setError("Proof image must be 3 MB or smaller.");
+      return;
+    }
+    setError("");
     setProof(file);
     const reader = new FileReader();
     reader.onload = () => setProofBase64(String(reader.result ?? ""));
@@ -234,7 +243,7 @@ function PurchasePage() {
               </span>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp"
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && readProof(e.target.files[0])}
               />

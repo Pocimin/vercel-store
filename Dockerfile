@@ -21,6 +21,12 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm db:generate
 RUN pnpm build
 
+RUN groupadd --system --gid 10001 nznt \
+  && useradd --system --uid 10001 --gid 10001 --home-dir /app --shell /usr/sbin/nologin nznt \
+  && mkdir -p /app/storage \
+  && chown -R 10001:10001 /app
+
 ENV NODE_ENV=production
+USER 10001:10001
 
 CMD ["node", "apps/api/dist/server.js"]

@@ -1,12 +1,13 @@
 import type { FastifyInstance } from "fastify";
-import { randomBytes } from "node:crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { authenticator } from "otplib";
 import { z } from "zod";
 import { LicenseStatus, UserRole, db } from "@nznt/db";
 import { hashPassword, hashSecret, signSession, verifyPassword } from "@nznt/auth";
 import { env } from "../env.js";
-import { clearSessionCookie, requireAdminUser, requireUser, setSessionCookie } from "../lib/session.js";
+import { clearDiscordOAuthStateCookie, clearSessionCookie, getCookie, requireAdminUser, requireUser, setDiscordOAuthStateCookie, setSessionCookie } from "../lib/session.js";
 import { verifyTurnstile } from "../lib/turnstile.js";
+import { requireBrowserRequest } from "../lib/csrf.js";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -107,7 +108,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     return { ok: true, data: { user: sanitizeUser(user) } };
   });
 
-  app.post("/auth/redeem", authRateLimit, async (request, reply) => {
+  app.post("/auth/redeem", { ...authRateLimit, preHandler: requireBrowserRequest }, async (request, reply) => {
     const input = redeemSchema.parse(request.body);
     const keyHash = hashSecret(input.licenseKey.trim().toUpperCase(), env.SCRIPT_SIGNING_SECRET);
     const license = await db.license.findUnique({ where: { keyHash } });
@@ -138,7 +139,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     return reply.status(201).send({ ok: true, data: { user: sanitizeUser(user) } });
   });
 
-  app.post("/auth/logout", async (_request, reply) => {
+  app.post("/auth/logout", { preHandler: requireBrowserRequest }, async (_request, reply) => {
     clearSessionCookie(reply);
     return { ok: true, data: { loggedOut: true } };
   });
@@ -148,22 +149,34 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       return reply.status(503).send("Discord login is not configured");
     }
 
+    const state = randomBytes(32).toString("base64url");
+    setDiscordOAuthStateCookie(reply, state);
     const params = new URLSearchParams({
       client_id: env.DISCORD_CLIENT_ID,
       redirect_uri: env.DISCORD_REDIRECT_URI,
       response_type: "code",
-      scope: "identify email"
+      scope: "identify email",
+      state
     });
 
     return reply.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`);
   });
 
-  app.get<{ Querystring: { code?: string } }>("/auth/discord/callback", async (request, reply) => {
+  app.get<{ Querystring: { code?: string; state?: string; error?: string } }>("/auth/discord/callback", async (request, reply) => {
     if (!env.DISCORD_CLIENT_ID || !env.DISCORD_CLIENT_SECRET || !env.DISCORD_REDIRECT_URI) {
       return reply.status(503).send("Discord login is not configured");
     }
 
+    const expectedState = getCookie(request, "nznt_discord_oauth_state");
+    const receivedState = request.query.state;
+    const stateMatches = Boolean(expectedState && receivedState && expectedState.length === receivedState.length && timingSafeEqual(Buffer.from(expectedState), Buffer.from(receivedState)));
+    if (!stateMatches) {
+      clearDiscordOAuthStateCookie(reply);
+      return reply.redirect(`${env.PUBLIC_WEB_URL}?discord=state_failed`);
+    }
+
     if (!request.query.code) {
+      clearDiscordOAuthStateCookie(reply);
       return reply.redirect(`${env.PUBLIC_WEB_URL}?discord=missing_code`);
     }
 
@@ -180,11 +193,13 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     });
 
     if (!tokenResponse.ok) {
+      clearDiscordOAuthStateCookie(reply);
       return reply.redirect(`${env.PUBLIC_WEB_URL}?discord=token_failed`);
     }
 
     const tokenData = await tokenResponse.json() as { access_token?: string };
     if (!tokenData.access_token) {
+      clearDiscordOAuthStateCookie(reply);
       return reply.redirect(`${env.PUBLIC_WEB_URL}?discord=no_token`);
     }
 
@@ -193,6 +208,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     });
 
     if (!discordResponse.ok) {
+      clearDiscordOAuthStateCookie(reply);
       return reply.redirect(`${env.PUBLIC_WEB_URL}?discord=user_failed`);
     }
 
@@ -228,6 +244,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
         });
 
     const token = await signSession({ userId: user.id, role: user.role }, env.SESSION_SECRET);
+    clearDiscordOAuthStateCookie(reply);
     setSessionCookie(reply, token);
     return reply.redirect(`${env.PUBLIC_WEB_URL}/dashboard?discord=ok`);
   });

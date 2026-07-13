@@ -10,6 +10,7 @@ import { registerRawRoutes } from "./routes/raw.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerPurchaseRoutes } from "./routes/purchases.js";
 import { registerBioRoutes } from "./routes/bio.js";
+import { ZodError } from "zod";
 
 export async function buildHttpServer() {
   const app = Fastify({
@@ -23,12 +24,14 @@ export async function buildHttpServer() {
 
   await app.register(helmet, {
     global: true,
-    contentSecurityPolicy: false
+    contentSecurityPolicy: false,
+    strictTransportSecurity: env.NODE_ENV === "production" ? { maxAge: 31536000, includeSubDomains: true } : false
   });
 
   await app.register(cors, {
     origin: [env.PUBLIC_WEB_URL, "https://nznt.store", "https://www.nznt.store"],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Protection"]
   });
 
   await app.register(rateLimit, {
@@ -46,6 +49,12 @@ export async function buildHttpServer() {
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);
+    if (error instanceof ZodError) {
+      return reply.status(400).send({
+        ok: false,
+        error: { code: "INVALID_REQUEST", message: "Request body is invalid" }
+      });
+    }
     const err = error instanceof Error ? error : new Error("Unknown error");
     const maybeStatus = "statusCode" in err && typeof err.statusCode === "number" ? err.statusCode : undefined;
     const statusCode = maybeStatus && maybeStatus >= 400 ? maybeStatus : 500;

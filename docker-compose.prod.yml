@@ -24,6 +24,13 @@ services:
   api:
     build: .
     restart: unless-stopped
+    user: "10001:10001"
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 256
+    mem_limit: 768m
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
     command: ["node", "apps/api/dist/server.js"]
     env_file: .env
     environment:
@@ -48,6 +55,13 @@ services:
         VITE_API_URL: ${PUBLIC_API_URL}
         VITE_TURNSTILE_SITE_KEY: ${PUBLIC_TURNSTILE_SITE_KEY}
     restart: unless-stopped
+    user: "10001:10001"
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
     command: ["pnpm", "--filter", "@nznt/web", "preview"]
     env_file: .env
     environment:
@@ -61,6 +75,13 @@ services:
   worker:
     build: .
     restart: unless-stopped
+    user: "10001:10001"
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 256
+    mem_limit: 1024m
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=128m"]
     command: ["node", "apps/worker/dist/worker.js"]
     env_file: .env
     environment:
@@ -81,6 +102,13 @@ services:
   bot:
     build: .
     restart: unless-stopped
+    user: "10001:10001"
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 512m
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=64m"]
     command: ["node", "apps/bot/dist/bot.js"]
     env_file: .env
     depends_on:

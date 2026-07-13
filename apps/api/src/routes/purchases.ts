@@ -9,16 +9,30 @@ import { env } from "../env.js";
 import { notifyDiscord } from "../lib/discord.js";
 import { sendEmail } from "../lib/email.js";
 import { requireAdminUser, requireUser } from "../lib/session.js";
+import { requireBrowserRequest } from "../lib/csrf.js";
 import { createVonaliaUser, findVonaliaUser, vonaliaStatus } from "../lib/vonalia.js";
 
 const purchaseSchema = z.object({
-  plan: z.string().min(1),
-  method: z.string().min(1),
+  plan: z.string().trim().min(1).max(64),
+  method: z.string().trim().min(1).max(32),
   amount: z.coerce.number().int().positive(),
   currency: z.string().min(3).max(8).default("IDR"),
   proofFileName: z.string().min(1).max(160).optional(),
-  proofBase64: z.string().min(1).optional()
+  proofBase64: z.string().min(1).max(4_000_000).optional()
 });
+
+function decodeProof(value: string) {
+  const match = value.match(/^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/);
+  const encoded = match?.[2];
+  if (!encoded || encoded.length % 4 === 1) throw new Error("Proof must be a PNG, JPEG, or WebP image");
+  const content = Buffer.from(encoded, "base64");
+  if (content.length > 3 * 1024 * 1024) throw new Error("Proof image is too large");
+  const isPng = content.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  const isJpeg = content.subarray(0, 3).equals(Buffer.from([255, 216, 255]));
+  const isWebp = content.subarray(0, 4).toString("ascii") === "RIFF" && content.subarray(8, 12).toString("ascii") === "WEBP";
+  if (!(isPng || isJpeg || isWebp)) throw new Error("Proof content is not a supported image");
+  return content;
+}
 
 function publicDashboardUser(user: Awaited<ReturnType<typeof requireUser>>) {
   if (!user) return null;
@@ -53,7 +67,7 @@ function licenseSecret(ciphertext: string | null) {
 }
 
 export async function registerPurchaseRoutes(app: FastifyInstance) {
-  app.post("/purchase", async (request, reply) => {
+  app.post("/purchase", { preHandler: requireBrowserRequest }, async (request, reply) => {
     const user = await requireUser(request, reply);
     if (!user) return;
     const input = purchaseSchema.parse(request.body);
@@ -61,9 +75,14 @@ export async function registerPurchaseRoutes(app: FastifyInstance) {
     if (input.proofBase64) {
       const uploadDir = join("storage/uploads", user.id);
       await mkdir(uploadDir, { recursive: true });
-      const safeName = `${Date.now()}-${(input.proofFileName ?? "proof.txt").replace(/[^a-zA-Z0-9_.-]/g, "_")}`;
+      const safeName = `${Date.now()}-${randomBytes(12).toString("hex")}.img`;
       const filePath = join(uploadDir, safeName);
-      const content = Buffer.from(input.proofBase64.replace(/^data:[^;]+;base64,/, ""), "base64");
+      let content: Buffer;
+      try {
+        content = decodeProof(input.proofBase64);
+      } catch (error) {
+        return reply.status(400).send({ ok: false, error: { code: "INVALID_PROOF", message: error instanceof Error ? error.message : "Invalid proof" } });
+      }
       await writeFile(filePath, content);
       proofUrl = filePath;
     }
@@ -165,7 +184,7 @@ export async function registerPurchaseRoutes(app: FastifyInstance) {
     };
   });
 
-  app.post("/user/monitoring-code", async (request, reply) => {
+  app.post("/user/monitoring-code", { preHandler: requireBrowserRequest }, async (request, reply) => {
     const user = await requireUser(request, reply);
     if (!user) return;
     if (user.monitoringCodeCiphertext) {
@@ -187,7 +206,7 @@ export async function registerPurchaseRoutes(app: FastifyInstance) {
     return { ok: true, data: { code, preview: updated.monitoringCodePreview } };
   });
 
-  app.post("/user/license/verify", async (request, reply) => {
+  app.post("/user/license/verify", { preHandler: requireBrowserRequest }, async (request, reply) => {
     const user = await requireUser(request, reply);
     if (!user) return;
     const license = await db.license.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });

@@ -1,9 +1,9 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
-import { join, normalize } from "node:path";
+import { join, normalize, resolve, sep } from "node:path";
 import type { FastifyInstance } from "fastify";
 
-const scriptRoot = normalize(process.env.SCRIPT_ARTIFACT_ROOT ?? "storage/builds");
+const scriptRoot = resolve(normalize(process.env.SCRIPT_ARTIFACT_ROOT ?? "storage/builds"));
 
 function resolveScriptPath(fileName: string) {
   const cleaned = fileName.replace(/\\/g, "/").split("/").pop();
@@ -11,7 +11,8 @@ function resolveScriptPath(fileName: string) {
     return null;
   }
 
-  return join(scriptRoot, cleaned);
+  const filePath = resolve(scriptRoot, cleaned);
+  return filePath.startsWith(`${scriptRoot}${sep}`) ? filePath : null;
 }
 
 export async function registerRawRoutes(app: FastifyInstance) {

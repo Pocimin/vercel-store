@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { z } from "zod";
 import { ScriptBuildStatus, SessionStatus, UserRole, db } from "@nznt/db";
 import { assertServiceToken } from "@nznt/auth";
@@ -18,8 +18,8 @@ const scriptUploadSchema = z.object({
   game: z.string().min(1).default("unknown"),
   type: z.string().min(1).default("roblox"),
   channel: z.string().min(1).default("stable"),
-  version: z.string().min(1),
-  source: z.string().min(1)
+  version: z.string().regex(/^[a-zA-Z0-9._-]{1,64}$/),
+  source: z.string().min(1).max(3_000_000)
 });
 
 const adminRoles: UserRole[] = [UserRole.SUPPORT, UserRole.ADMIN, UserRole.OWNER];
@@ -130,9 +130,13 @@ export async function registerAdminRoutes(app: FastifyInstance) {
       }
     });
 
-    const rawDir = join(env.SCRIPT_RAW_ROOT, script.id);
+    const rawRoot = resolve(env.SCRIPT_RAW_ROOT);
+    const rawDir = resolve(rawRoot, script.id);
+    if (!rawDir.startsWith(`${rawRoot}${sep}`)) {
+      return reply.status(400).send({ ok: false, error: { code: "INVALID_PATH", message: "Invalid script path" } });
+    }
     await mkdir(rawDir, { recursive: true });
-    const sourcePath = join(rawDir, `${input.version}.lua`);
+    const sourcePath = resolve(rawDir, `${input.version}.lua`);
     await writeFile(sourcePath, input.source, "utf8");
 
     const build = await db.scriptBuild.upsert({

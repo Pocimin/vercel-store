@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { basename, join, resolve, sep } from "node:path";
 import { spawn } from "node:child_process";
 import { decryptSecret, encryptSecret, hashSecret, previewSecret } from "@nznt/auth";
 import { LicenseSource, LicenseStatus, ScriptBuildStatus, db } from "@nznt/db";
@@ -321,7 +321,12 @@ async function processBuild() {
 
   try {
     await mkdir(scriptArtifactRoot, { recursive: true });
-    const outputPath = join(scriptArtifactRoot, basename(build.script.fileName));
+    const rawRoot = resolve(process.env.SCRIPT_RAW_ROOT ?? "storage/raw");
+    const sourcePath = resolve(build.sourcePath);
+    if (!sourcePath.startsWith(`${rawRoot}${sep}`)) throw new Error("Build source is outside the raw script directory");
+    const outputPath = resolve(scriptArtifactRoot, basename(build.script.fileName));
+    const artifactRoot = resolve(scriptArtifactRoot);
+    if (!outputPath.startsWith(`${artifactRoot}${sep}`)) throw new Error("Build output is outside the artifact directory");
     const cliPath = resolve(prometheusRoot, "cli.lua");
 
     await run("lua", [
@@ -331,7 +336,7 @@ async function processBuild() {
       "--LuaU",
       "--out",
       outputPath,
-      build.sourcePath
+      sourcePath
     ], resolve(prometheusRoot));
 
     const checksum = await checksumFile(outputPath);

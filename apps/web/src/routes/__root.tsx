@@ -105,6 +105,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  if (typeof document !== "undefined") {
+    return (
+      <>
+        <HeadContent />
+        {children}
+      </>
+    );
+  }
+
   return (
     <html lang="en">
       <head>
@@ -125,7 +134,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <LanguageModal />
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </I18nProvider>
     </QueryClientProvider>

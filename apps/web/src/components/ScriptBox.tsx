@@ -19,16 +19,23 @@ export function ScriptBox({
   };
 
   return (
-    <div className="rounded-lg border border-white/10 bg-[#0a0a0a]">
-      {label && (
-        <div className="border-b border-white/5 px-4 py-2 text-xs font-medium text-muted-foreground">
-          {label}
-        </div>
-      )}
+    <div className="card overflow-hidden rounded-xl">
+      <div className="flex items-center gap-2 border-b border-white/5 bg-black/30 px-4 py-2.5">
+        <span className="h-2.5 w-2.5 rounded-full bg-[oklch(0.63_0.24_27)]/70" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[oklch(0.8_0.16_80)]/70" />
+        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" />
+        {label && (
+          <span className="ml-2 font-mono text-xs font-medium text-muted-foreground">{label}</span>
+        )}
+      </div>
       <div className="relative p-4">
         <button
           onClick={copy}
-          className="absolute right-3 top-3 inline-flex items-center gap-1 text-xs text-muted-foreground transition hover:text-foreground"
+          className={`absolute right-3 top-3 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition ${
+            copied
+              ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-400"
+              : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/20 hover:text-foreground"
+          }`}
           aria-label="Copy script"
         >
           {copied ? (
@@ -38,7 +45,7 @@ export function ScriptBox({
           )}
           <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
         </button>
-        <pre className="whitespace-pre-wrap break-all pr-14 font-mono text-[13px] leading-relaxed text-foreground/80">
+        <pre className="whitespace-pre-wrap break-all pr-16 font-mono text-[13px] leading-relaxed text-foreground/80">
           <code>{script}</code>
         </pre>
       </div>

@@ -68,27 +68,27 @@ function RedeemPage() {
       <main className="mx-auto flex max-w-xl flex-col items-center px-6 py-24">
         {step === "key" ? (
           <>
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03]"><KeyRound className="h-6 w-6 text-foreground" /></div>
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-[oklch(0.74_0.19_47/0.3)] bg-[oklch(0.74_0.19_47/0.12)] shadow-[0_0_28px_-6px_oklch(0.74_0.19_47/0.5)]"><KeyRound className="h-6 w-6 text-[oklch(0.82_0.15_55)]" /></div>
             <h1 className="text-center text-4xl font-extrabold text-foreground">{t("redeemTitle")}</h1>
             <p className="mt-3 text-center text-muted-foreground">{t("redeemSub")}</p>
             <form onSubmit={submitKey} className="mt-10 w-full" noValidate>
               <label className="sr-only" htmlFor="redeem-key">License key</label>
-              <input id="redeem-key" name="licenseKey" autoComplete="off" spellCheck={false} placeholder="NZNT-XXXXXX-XXXXXX-XXXXXX" className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-center font-mono text-sm font-semibold tracking-wide text-foreground outline-none focus:border-foreground" />
+              <input id="redeem-key" name="licenseKey" autoComplete="off" spellCheck={false} placeholder="NZNT-XXXXXX-XXXXXX-XXXXXX" className="w-full field-input px-4 py-3 text-center font-mono text-sm font-semibold tracking-wide text-foreground outline-none focus:border-foreground" />
               {error && <p className="mt-4 text-center text-sm text-rose-400">{error}</p>}
-              <button type="submit" className="mt-8 inline-flex w-full justify-center rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111]">{t("activateLicense")}</button>
+              <button type="submit" className="mt-8 inline-flex w-full justify-center rounded-full btn-primary px-7 py-3.5 text-base font-semibold text-[#111]">{t("activateLicense")}</button>
             </form>
           </>
         ) : (
           <>
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03]"><UserPlus className="h-6 w-6 text-foreground" /></div>
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-[oklch(0.74_0.19_47/0.3)] bg-[oklch(0.74_0.19_47/0.12)] shadow-[0_0_28px_-6px_oklch(0.74_0.19_47/0.5)]"><UserPlus className="h-6 w-6 text-[oklch(0.82_0.15_55)]" /></div>
             <h1 className="text-center text-4xl font-extrabold text-foreground">{t("createAccount")}</h1>
             <p className="mt-3 text-center text-muted-foreground">{t("createAccountSub")}</p>
             <form onSubmit={submitAccount} className="mt-10 w-full space-y-4" noValidate>
-              <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-email">Email<input id="redeem-email" name="email" type="email" autoComplete="off" spellCheck={false} required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
-              <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-username">{t("username")}<input id="redeem-username" name="username" autoComplete="off" spellCheck={false} required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
-              <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-password">{t("password")}<input id="redeem-password" name="password" type="password" autoComplete="off" required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
+              <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-email">Email<input id="redeem-email" name="email" type="email" autoComplete="off" spellCheck={false} required className="mt-2 w-full field-input px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
+              <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-username">{t("username")}<input id="redeem-username" name="username" autoComplete="off" spellCheck={false} required className="mt-2 w-full field-input px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
+              <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-password">{t("password")}<input id="redeem-password" name="password" type="password" autoComplete="off" required className="mt-2 w-full field-input px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
               {error && <p className="text-center text-sm text-rose-400">{error}</p>}
-              <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "Please wait..." : t("createContinue")}</button>
+              <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full btn-primary px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "Please wait..." : t("createContinue")}</button>
             </form>
           </>
         )}

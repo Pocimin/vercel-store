@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { randomBytes } from "node:crypto";
 import { authenticator } from "otplib";
 import { z } from "zod";
 import { LicenseStatus, UserRole, db } from "@nznt/db";
@@ -30,30 +31,52 @@ const redeemSchema = z.object({
   robloxUsername: z.string().min(1).max(64).optional()
 });
 
+const authRateLimit = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
+
 export async function registerAuthRoutes(app: FastifyInstance) {
-  app.post("/auth/register", async (request, reply) => {
+  const decoyPasswordHash = await hashPassword(randomBytes(24).toString("hex"));
+
+  app.post("/auth/register", authRateLimit, async (request, reply) => {
     const input = registerSchema.parse(request.body);
     if (!(await verifyTurnstile(input.turnstileToken, request.ip))) {
       return reply.status(400).send({ ok: false, error: { code: "CAPTCHA_FAILED", message: "Captcha verification failed" } });
     }
+
+    const email = input.email.toLowerCase();
+    const existing = await db.user.findFirst({
+      where: { OR: [{ email }, { username: input.username }] },
+      select: { id: true }
+    });
+    if (existing) {
+      return reply.status(409).send({ ok: false, error: { code: "ACCOUNT_EXISTS", message: "An account with that email or username already exists." } });
+    }
+
     const passwordHash = await hashPassword(input.password);
 
-    const user = await db.user.create({
-      data: {
-        email: input.email.toLowerCase(),
-        username: input.username,
-        displayName: input.username,
-        passwordHash,
-        robloxUsername: input.robloxUsername ?? null
+    let user;
+    try {
+      user = await db.user.create({
+        data: {
+          email,
+          username: input.username,
+          displayName: input.username,
+          passwordHash,
+          robloxUsername: input.robloxUsername ?? null
+        }
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        return reply.status(409).send({ ok: false, error: { code: "ACCOUNT_EXISTS", message: "An account with that email or username already exists." } });
       }
-    });
+      throw error;
+    }
 
     const token = await signSession({ userId: user.id, role: user.role }, env.SESSION_SECRET);
     setSessionCookie(reply, token);
     return reply.status(201).send({ ok: true, data: { user: sanitizeUser(user) } });
   });
 
-  app.post("/auth/login", async (request, reply) => {
+  app.post("/auth/login", authRateLimit, async (request, reply) => {
     const input = loginSchema.parse(request.body);
     if (!(await verifyTurnstile(input.turnstileToken, request.ip))) {
       return reply.status(400).send({ ok: false, error: { code: "CAPTCHA_FAILED", message: "Captcha verification failed" } });
@@ -68,7 +91,8 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       }
     });
 
-    if (!user || !user.passwordHash || !(await verifyPassword(input.password, user.passwordHash))) {
+    const passwordValid = await verifyPassword(input.password, user?.passwordHash ?? decoyPasswordHash);
+    if (!user || !user.passwordHash || !passwordValid) {
       return reply.status(401).send({ ok: false, error: { code: "BAD_LOGIN", message: "Invalid login" } });
     }
 
@@ -83,7 +107,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     return { ok: true, data: { user: sanitizeUser(user) } };
   });
 
-  app.post("/auth/redeem", async (request, reply) => {
+  app.post("/auth/redeem", authRateLimit, async (request, reply) => {
     const input = redeemSchema.parse(request.body);
     const keyHash = hashSecret(input.licenseKey.trim().toUpperCase(), env.SCRIPT_SIGNING_SECRET);
     const license = await db.license.findUnique({ where: { keyHash } });
@@ -249,6 +273,10 @@ export async function registerAuthRoutes(app: FastifyInstance) {
 
     return { ok: true, data: { user: sanitizeUser(updated) } };
   });
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === "P2002";
 }
 
 function sanitizeUser(user: {

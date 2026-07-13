@@ -16,7 +16,7 @@ export const Route = createFileRoute("/admin")({
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-white/5 bg-[#141414] p-5">
+    <section className="card p-5">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">{title}</h2>
       {children}
     </section>
@@ -25,9 +25,9 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function Stat({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-[#141414] p-5">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04]">
-        <Icon className="h-4 w-4 text-foreground" />
+    <div className="card card-glow p-5">
+      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg border border-[oklch(0.74_0.19_47/0.25)] bg-[oklch(0.74_0.19_47/0.12)]">
+        <Icon className="h-4 w-4 text-[oklch(0.82_0.15_55)]" />
       </div>
       <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
       <div className="mt-1 text-2xl font-extrabold text-foreground">{value}</div>
@@ -115,7 +115,7 @@ function AdminPage() {
           value={token}
           onChange={(e) => setToken(e.target.value)}
           placeholder="Optional INTERNAL_SERVICE_TOKEN"
-          className="w-full rounded-xl border border-white/10 bg-transparent px-5 py-3.5 text-foreground outline-none transition focus:border-foreground"
+          className="w-full field-input px-5 py-3.5 text-foreground outline-none transition focus:border-foreground"
         />
         <div className="grid gap-4 sm:grid-cols-4">
           <Stat icon={Activity} label="Active sessions" value={monitoring?.activeSessions ?? "-"} />
@@ -143,7 +143,7 @@ function AdminPage() {
                   <td className="py-3">{payment.status}</td>
                   <td className="py-3">
                     {payment.status === "PENDING" && (
-                      <button onClick={() => approve(payment.id)} className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-4 py-2 text-xs font-semibold text-[#111]">
+                      <button onClick={() => approve(payment.id)} className="inline-flex items-center gap-2 rounded-full btn-primary px-4 py-2 text-xs font-semibold text-[#111]">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Approve
                       </button>
                     )}
@@ -186,13 +186,13 @@ function AdminPage() {
         <Card title="Upload script">
           <form onSubmit={uploadScript} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <input value={upload.fileName} onChange={(e) => setUpload({ ...upload, fileName: e.target.value })} className="rounded-xl border border-white/10 bg-transparent px-5 py-3.5 text-foreground outline-none transition focus:border-foreground" />
-              <input value={upload.version} onChange={(e) => setUpload({ ...upload, version: e.target.value })} className="rounded-xl border border-white/10 bg-transparent px-5 py-3.5 text-foreground outline-none transition focus:border-foreground" />
-              <input value={upload.game} onChange={(e) => setUpload({ ...upload, game: e.target.value })} className="rounded-xl border border-white/10 bg-transparent px-5 py-3.5 text-foreground outline-none transition focus:border-foreground" />
-              <input value={upload.channel} onChange={(e) => setUpload({ ...upload, channel: e.target.value })} className="rounded-xl border border-white/10 bg-transparent px-5 py-3.5 text-foreground outline-none transition focus:border-foreground" />
+              <input value={upload.fileName} onChange={(e) => setUpload({ ...upload, fileName: e.target.value })} className="field-input px-5 py-3.5 text-foreground outline-none transition focus:border-foreground" />
+              <input value={upload.version} onChange={(e) => setUpload({ ...upload, version: e.target.value })} className="field-input px-5 py-3.5 text-foreground outline-none transition focus:border-foreground" />
+              <input value={upload.game} onChange={(e) => setUpload({ ...upload, game: e.target.value })} className="field-input px-5 py-3.5 text-foreground outline-none transition focus:border-foreground" />
+              <input value={upload.channel} onChange={(e) => setUpload({ ...upload, channel: e.target.value })} className="field-input px-5 py-3.5 text-foreground outline-none transition focus:border-foreground" />
             </div>
-            <textarea value={upload.source} onChange={(e) => setUpload({ ...upload, source: e.target.value })} className="min-h-64 w-full rounded-xl border border-white/10 bg-transparent px-5 py-3.5 font-mono text-sm text-foreground outline-none transition focus:border-foreground" />
-            <button className="rounded-full bg-[#f3efe7] px-5 py-2.5 text-sm font-semibold text-[#111]">Upload & obfuscate</button>
+            <textarea value={upload.source} onChange={(e) => setUpload({ ...upload, source: e.target.value })} className="min-h-64 w-full field-input px-5 py-3.5 font-mono text-sm text-foreground outline-none transition focus:border-foreground" />
+            <button className="rounded-full btn-primary px-5 py-2.5 text-sm font-semibold text-[#111]">Upload & obfuscate</button>
           </form>
         </Card>
       </main>

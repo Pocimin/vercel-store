@@ -21,7 +21,7 @@ const types = {
 function safePath(url) {
   const pathname = decodeURIComponent(new URL(url, "http://localhost").pathname);
   const candidate = resolve(root, `.${normalize(pathname)}`);
-  return candidate.startsWith(`${root}/`) ? candidate : null;
+  return candidate === root || candidate.startsWith(`${root}/`) ? candidate : null;
 }
 
 const server = createServer(async (request, response) => {

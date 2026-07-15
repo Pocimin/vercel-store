@@ -13,6 +13,7 @@
 }
 
 nznt.store, www.nznt.store {
+  tls /data/nznt.store.crt /data/nznt.store.key
   import secure_headers
   reverse_proxy 127.0.0.1:3300
 }

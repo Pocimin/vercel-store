@@ -97,7 +97,7 @@ services:
     volumes:
       - script_storage:/app/storage
       - ../Prometheus-master:/app/Prometheus-master:ro
-      - /root/nznt/database.json:/app/legacy/database.json:ro
+      - ../legacy/database.json:/app/legacy/database.json:ro
 
   bot:
     build: .

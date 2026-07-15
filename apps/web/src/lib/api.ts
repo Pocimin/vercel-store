@@ -80,7 +80,7 @@ export function api(path: string, init: RequestInit = {}) {
     ...init,
     credentials: "include",
     headers: {
-      ...(init.body ? { "content-type": "application/json" } : {}),
+      "content-type": "application/json",
       "x-csrf-protection": "1",
       ...(init.headers ?? {}),
     },

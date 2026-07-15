@@ -13,15 +13,17 @@ export async function requireBrowserRequest(request: FastifyRequest, reply: Fast
   if (request.headers.authorization?.startsWith("Bearer ")) return;
   const origin = request.headers.origin;
   const csrfHeader = request.headers["x-csrf-protection"];
+  const contentType = (request.headers["content-type"] ?? "").split(";", 1)[0]?.trim().toLowerCase();
   const fetchSite = request.headers["sec-fetch-site"];
   const origins = origin?.split(",").map((value) => value.trim()).filter(Boolean) ?? [];
   const originAllowed = origins.length > 0 && new Set(origins).size === 1 && origins[0] !== undefined && allowedOrigins().has(origins[0]);
   const fetchSiteAllowed = !fetchSite || fetchSite === "same-origin" || fetchSite === "same-site" || fetchSite === "cors";
-  const csrfHeaderValid = csrfHeader === undefined || csrfHeader === "1";
+  const csrfHeaderValid = csrfHeader === "1";
+  const contentTypeValid = contentType === "application/json";
 
-  // Some reverse proxies remove custom request headers. The exact Origin is the
-  // primary CSRF check; Fetch Metadata adds a second browser-side signal.
-  if (!originAllowed || !fetchSiteAllowed || !csrfHeaderValid) {
+  // Require both an exact same-site origin and a non-simple JSON request. This
+  // blocks cross-site form submissions even if a sibling origin is compromised.
+  if (!originAllowed || !fetchSiteAllowed || !csrfHeaderValid || !contentTypeValid) {
     return reply.status(403).send({
       ok: false,
       error: { code: "CSRF_REJECTED", message: "Browser request verification failed" }

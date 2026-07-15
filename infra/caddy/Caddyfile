@@ -1,0 +1,15 @@
+{
+  email admin@nznt.store
+}
+
+nznt.store, www.nznt.store {
+  reverse_proxy 127.0.0.1:3300
+}
+
+api.nznt.store {
+  reverse_proxy 127.0.0.1:4400
+}
+
+scripts.nznt.store {
+  reverse_proxy 127.0.0.1:4400
+}

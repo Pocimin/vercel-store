@@ -10,9 +10,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@nznt/db": "workspace:*",
     "@nznt/auth": "workspace:*",
-    "discord.js": "^14.25.1"
+    "@nznt/db": "workspace:*",
+    "discord.js": "^14.27.0"
   },
   "devDependencies": {
     "tsx": "^4.21.0",

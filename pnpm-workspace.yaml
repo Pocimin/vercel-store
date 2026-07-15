@@ -12,3 +12,8 @@ allowBuilds:
   '@prisma/engines': true
   esbuild: true
   prisma: true
+overrides:
+  undici: 6.27.0
+minimumReleaseAgeExclude:
+  - '@discordjs/rest@2.6.2'
+  - discord.js@14.27.0

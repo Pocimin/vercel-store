@@ -91,7 +91,7 @@ function Sidebar({ tab, setTab, signOut }: { tab: Tab; setTab: (t: Tab) => void;
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="card p-5">
+    <div className="rounded-xl border border-white/5 bg-[#141414] p-5">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">{title}</h3>
         {action}
@@ -113,9 +113,9 @@ function Stat({
   sub?: string;
 }) {
   return (
-    <div className="card card-glow p-5">
-      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg border border-[oklch(0.74_0.19_47/0.25)] bg-[oklch(0.74_0.19_47/0.12)]">
-        <Icon className="h-4 w-4 text-[oklch(0.82_0.15_55)]" />
+    <div className="rounded-xl border border-white/5 bg-[#141414] p-5">
+      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04]">
+        <Icon className="h-4 w-4 text-foreground" />
       </div>
       <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
       <div className="mt-1 text-2xl font-extrabold text-foreground">{value}</div>
@@ -150,7 +150,7 @@ function Overview() {
           <p className="text-sm text-muted-foreground">
             Use the universal loader below. Your key and active sessions stay attached to this account.
           </p>
-          <Link to="/dashboard" search={{}} hash="" className="mt-4 inline-flex items-center gap-2 rounded-full btn-primary px-5 py-2.5 text-sm font-semibold text-[#111] transition-transform hover:-translate-y-0.5">
+          <Link to="/dashboard" search={{}} hash="" className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-5 py-2.5 text-sm font-semibold text-[#111] transition-transform hover:-translate-y-0.5">
             <Download className="h-4 w-4" />
             {t("downloadScript")}
           </Link>
@@ -322,7 +322,7 @@ function Monitoring() {
           <code className="min-w-0 flex-1 truncate rounded-lg border border-dashed border-white/10 bg-black/30 px-4 py-3 text-sm text-foreground">
             {monitoringCode || "No monitoring code generated"}
           </code>
-          {!monitoringCode && <button onClick={issueCode} className="rounded-full btn-primary px-4 py-2 text-sm font-semibold text-[#111]">Generate code</button>}
+          {!monitoringCode && <button onClick={issueCode} className="rounded-full bg-[#f3efe7] px-4 py-2 text-sm font-semibold text-[#111]">Generate code</button>}
           {monitoringCode && <button onClick={copyCode} className={`inline-flex min-w-24 items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition duration-200 ${codeCopied ? "scale-95 border-emerald-400/40 bg-emerald-500/15 text-emerald-400" : "border-white/10 text-foreground"}`}>
             {codeCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             {codeCopied ? "Copied" : "Copy"}
@@ -402,7 +402,7 @@ function Support() {
       <div className="grid gap-4 sm:grid-cols-2">
         <Card title="Discord">
           <p className="text-sm text-muted-foreground">{t("discordDesc")}</p>
-          <a href="https://discord.gg/nznt" target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-full btn-primary px-5 py-2.5 text-sm font-semibold text-[#111]">
+          <a href="https://discord.gg/nznt" target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-5 py-2.5 text-sm font-semibold text-[#111]">
             {t("openDiscord")}
           </a>
         </Card>
@@ -448,9 +448,9 @@ function Dashboard() {
 
   if (!data) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#0a0a0a] px-6 py-16">
+      <div className="min-h-screen bg-[#0a0a0a] px-6 py-20">
         <AuthPanel onDone={() => void load()} />
-        {error && <p className="mx-auto mt-4 max-w-md text-center text-sm text-muted-foreground">{error}</p>}
+        {error && <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground">{error}</p>}
       </div>
     );
   }

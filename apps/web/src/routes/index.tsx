@@ -47,9 +47,9 @@ export function Nav() {
   const { t } = useI18n();
   return (
     <header className="sticky top-0 z-50 px-4 pt-5">
-      <nav className="mx-auto flex max-w-3xl items-center justify-between rounded-full border border-white/10 bg-[#1c1c1c]/80 px-6 py-3 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+      <nav className="mx-auto flex max-w-3xl items-center justify-between rounded-full border border-white/5 bg-[#1c1c1c] px-6 py-3">
         <Link to="/" className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-foreground">
-          <img src="/nznt-logo.png" alt="" className="h-7 w-7 rounded-md object-cover ring-1 ring-white/10 shadow-[0_0_18px_-2px_oklch(0.74_0.19_47/0.55)]" />
+          <img src="/nznt-logo.png" alt="" className="h-7 w-7 rounded-md object-cover" />
           <span>nznt's hub</span>
         </Link>
         <ul className="flex items-center gap-6 text-sm text-muted-foreground">
@@ -86,19 +86,18 @@ function Hero() {
   const { t } = useI18n();
   const { days, hours, minutes, seconds } = useSaleCountdown();
   return (
-    <section className="relative px-4 pt-14 pb-8 text-center sm:pt-16">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 mx-auto h-[420px] max-w-4xl bg-[radial-gradient(60%_60%_at_50%_20%,oklch(0.74_0.19_47/0.22),transparent_70%)] blur-2xl" />
-      <h1 className="brand-animated reveal reveal-1 text-[22vw] font-extrabold leading-none tracking-tight drop-shadow-[0_20px_60px_oklch(0.74_0.19_47/0.35)] sm:text-[180px]">
+    <section className="px-4 pt-14 pb-8 text-center sm:pt-16">
+      <h1 className="brand-gradient text-[22vw] font-extrabold leading-none tracking-tight sm:text-[180px]">
         nznt's hub
       </h1>
-      <p className="reveal reveal-2 mt-6 text-base text-muted-foreground sm:text-lg">
+      <p className="mt-6 text-base text-muted-foreground sm:text-lg">
         {t("tagline")}
       </p>
 
-      <div className="reveal reveal-3 mt-10 flex flex-wrap items-center justify-center gap-3">
+      <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
         <Link
           to="/free"
-          className="btn-primary group rounded-full px-7 py-3.5 text-base"
+          className="group inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_10px_30px_-12px_rgba(0,0,0,0.6)] transition-transform hover:-translate-y-0.5"
         >
           {t("getStarted")}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -106,23 +105,23 @@ function Hero() {
 
         <Link
           to="/purchase"
-          className="btn-outline rounded-full px-7 py-3.5 text-base"
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-7 py-3.5 text-base font-semibold text-foreground transition hover:bg-white/[0.08]"
         >
           {t("buyPremium")}
         </Link>
       </div>
 
-      <div className="reveal reveal-4 mt-12 flex flex-col items-center gap-4">
+      <div className="mt-10 flex flex-col items-center gap-3">
         <p className="text-sm text-muted-foreground">
           <span className="brand-gradient font-bold">25%</span> {t("saleEndsIn")}
         </p>
-        <div className="card hairline flex items-center gap-5 px-6 py-4">
+        <div className="flex items-center gap-5">
           <TimeCell value={days} label={t("days")} />
-          <span className="text-muted-foreground/40">:</span>
+          <span className="text-muted-foreground/60">:</span>
           <TimeCell value={hours} label={t("hrs")} />
-          <span className="text-muted-foreground/40">:</span>
+          <span className="text-muted-foreground/60">:</span>
           <TimeCell value={minutes} label={t("min")} />
-          <span className="text-muted-foreground/40">:</span>
+          <span className="text-muted-foreground/60">:</span>
           <TimeCell value={seconds} label={t("sec")} />
         </div>
       </div>
@@ -153,12 +152,12 @@ function GamesShowcase() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="pointer-events-none absolute -inset-6 -z-10 bg-[radial-gradient(60%_60%_at_30%_20%,oklch(0.74_0.19_47/0.14),transparent_70%)]" />
+      <div className="pointer-events-none absolute -inset-6 -z-10 bg-[radial-gradient(60%_60%_at_30%_20%,rgba(255,140,60,0.10),transparent_70%)]" />
 
-      <div className="card card-glow hairline overflow-hidden rounded-[22px]">
+      <div className="overflow-hidden rounded-[22px] border border-white/10 bg-[#111] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.9)]">
 
         <div className="grid gap-0 sm:grid-cols-[210px_1fr]">
-          <ul className="border-b border-white/5 bg-black/30 p-2 sm:border-b-0 sm:border-r">
+          <ul className="border-b border-white/5 bg-[#0c0c0c] p-2 sm:border-b-0 sm:border-r">
             {GAMES.map((g) => {
               const on = g.id === active;
               return (
@@ -273,7 +272,7 @@ function StackedUI() {
 function FreeSection() {
   const { t } = useI18n();
   return (
-    <section id="free" className="scroll-reveal scroll-mt-24 px-4 py-24">
+    <section id="free" className="scroll-mt-24 px-4 py-24">
       <div className="mx-auto grid max-w-6xl items-start gap-16 md:grid-cols-2">
         <div>
           <ScriptBox script={LOADER_SCRIPT_HOME} />
@@ -299,7 +298,7 @@ function FreeSection() {
           <div className="mt-6">
             <Link
               to="/purchase"
-              className="btn-primary rounded-full px-6 py-3 text-base"
+              className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-6 py-3 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
             >
               {t("buyPremium")} <ArrowRight className="h-4 w-4" />
             </Link>
@@ -325,7 +324,7 @@ function FeatureRow({
   reverse?: boolean;
 }) {
   return (
-    <section className="scroll-reveal px-4 py-20">
+    <section className="px-4 py-20">
       <div
         className={`mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2 ${
           reverse ? "md:[&>div:first-child]:order-2" : ""

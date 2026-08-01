@@ -30,9 +30,8 @@ function Step({
 }) {
   return (
     <section className="relative border-l border-dashed border-white/10 pl-8 pb-14">
-      <span className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border border-[oklch(0.74_0.19_47/0.5)] bg-[oklch(0.74_0.19_47/0.18)] shadow-[0_0_16px_oklch(0.74_0.19_47/0.5)]" />
       <div className="mb-3 flex items-baseline gap-3">
-        <span className="brand-gradient text-4xl font-extrabold">{n}.</span>
+        <span className="text-4xl font-extrabold text-muted-foreground/50">{n}.</span>
         <h2 className="text-4xl font-extrabold tracking-tight text-foreground">{title}</h2>
       </div>
       <p className="mb-6 text-muted-foreground">{subtitle}</p>
@@ -142,7 +141,7 @@ function PurchasePage() {
                   type="button"
                   onClick={() => setPayment(p.id as Payment)}
                   className={`rounded-xl border p-5 text-left transition ${
-                    on ? "border-[oklch(0.74_0.19_47/0.6)] bg-[oklch(0.74_0.19_47/0.1)] shadow-[0_14px_44px_-22px_oklch(0.74_0.19_47/0.55)]" : "border-white/10 hover:border-white/20 hover:bg-white/[0.02]"
+                    on ? "border-foreground bg-white/5" : "border-white/10 hover:border-white/20"
                   }`}
                 >
                   <Icon className="mb-3 h-5 w-5 text-foreground" />
@@ -153,7 +152,7 @@ function PurchasePage() {
             })}
           </div>
 
-          <div className="card mt-6 p-5">
+          <div className="mt-6 rounded-xl border border-white/10 bg-[#0e0e0e] p-5">
             {payment === "qris" && (
               <div className="flex flex-col items-center gap-4">
                 <p className="text-sm text-muted-foreground">{t("scanQris")}</p>
@@ -189,7 +188,7 @@ function PurchasePage() {
                   href={selected.gamepass}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-4 inline-flex items-center gap-2 rounded-full btn-primary px-5 py-2.5 text-sm font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-5 py-2.5 text-sm font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
                 >
                   {t("buyGamepass")} <ExternalLink className="h-3.5 w-3.5" />
                 </a>
@@ -208,7 +207,7 @@ function PurchasePage() {
                   type="button"
                   onClick={() => setLicense(l.id)}
                   className={`rounded-xl border p-5 text-left transition ${
-                    on ? "border-[oklch(0.74_0.19_47/0.6)] bg-[oklch(0.74_0.19_47/0.1)] shadow-[0_14px_44px_-22px_oklch(0.74_0.19_47/0.55)]" : "border-white/10 hover:border-white/20 hover:bg-white/[0.02]"
+                    on ? "border-foreground bg-white/5" : "border-white/10 hover:border-white/20"
                   }`}
                 >
                   <div className="text-lg font-extrabold text-foreground">{t(l.labelKey)}</div>
@@ -256,7 +255,7 @@ function PurchasePage() {
             type="button"
             disabled={!user}
             onClick={submit}
-            className="inline-flex items-center gap-2 rounded-full btn-primary px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+            className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
           >
             {t("agreeContinue")}
           </button>

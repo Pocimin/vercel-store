@@ -1,4 +1,11 @@
-export const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+function defaultApiUrl() {
+  if (typeof window !== "undefined" && ["nznt.store", "www.nznt.store"].includes(window.location.hostname)) {
+    return "https://api.nznt.store";
+  }
+  return "http://localhost:4000";
+}
+
+export const apiUrl = import.meta.env.VITE_API_URL || defaultApiUrl();
 export const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";
 
 export type User = {

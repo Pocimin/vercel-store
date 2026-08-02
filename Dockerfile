@@ -27,6 +27,7 @@ RUN groupadd --system --gid 10001 nznt \
   && chown 10001:10001 /app/storage
 
 ENV NODE_ENV=production
+ENV COREPACK_HOME=/tmp/corepack
 USER 10001:10001
 
 CMD ["node", "apps/api/dist/server.js"]

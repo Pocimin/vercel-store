@@ -6,10 +6,10 @@ import { env } from "./env.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { registerScriptRoutes } from "./routes/script.js";
 import { registerAdminRoutes } from "./routes/admin.js";
-import { registerRawRoutes } from "./routes/raw.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerPurchaseRoutes } from "./routes/purchases.js";
 import { registerBioRoutes } from "./routes/bio.js";
+import { registerAutogopayWebhook } from "./routes/autogopay-webhook.js";
 import { ZodError } from "zod";
 
 export async function buildHttpServer() {
@@ -18,7 +18,7 @@ export async function buildHttpServer() {
       level: env.NODE_ENV === "production" ? "info" : "debug",
       redact: ["req.headers.authorization", "req.headers.cookie", "key", "hwid"]
     },
-    trustProxy: true,
+    trustProxy: ["loopback", "uniquelocal"],
     bodyLimit: 1024 * 1024 * 4
   });
 
@@ -42,10 +42,10 @@ export async function buildHttpServer() {
   await registerHealthRoutes(app);
   await registerAuthRoutes(app);
   await registerPurchaseRoutes(app);
+  await registerAutogopayWebhook(app);
   await registerBioRoutes(app);
   await registerScriptRoutes(app);
   await registerAdminRoutes(app);
-  await registerRawRoutes(app);
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);

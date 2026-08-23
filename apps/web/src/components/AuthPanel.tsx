@@ -1,20 +1,22 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Turnstile } from "./Turnstile";
-import { api, apiUrl, json, turnstileSiteKey, type User } from "@/lib/api";
+import { api, apiUrl, authErrorMessage, json, turnstileSiteKey, type User } from "@/lib/api";
 
 type AuthMode = "login" | "register";
 
 export function AuthPanel({
   initialMode = "login",
+  initialLicenseKey,
   onDone
 }: {
   initialMode?: AuthMode;
+  initialLicenseKey?: string;
   onDone: (user: User) => void;
 }) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [captchaVisible, setCaptchaVisible] = useState(false);
+  const [captchaEpoch, setCaptchaEpoch] = useState(0);
   const captchaToken = useRef("");
   const registering = mode === "register";
 
@@ -25,19 +27,24 @@ export function AuthPanel({
     const form = new FormData(event.currentTarget);
     const value = (name: string) => String(form.get(name) ?? "").trim();
     const password = value("password");
+    const licenseKey = value("licenseKey");
 
     if (registering && password !== value("confirmPassword")) {
-      setError("Passwords do not match.");
+      setError("Password tidak sama · Passwords do not match.");
+      return;
+    }
+    if (registering && licenseKey.length < 8) {
+      setError("License key minimal 8 karakter · License key must be at least 8 characters.");
       return;
     }
     if (turnstileSiteKey && !captchaToken.current) {
-      setCaptchaVisible(true);
-      setError("Complete the captcha, then submit again.");
+      setError("Selesaikan captcha dulu · Complete the captcha, then submit again.");
       return;
     }
 
     setBusy(true);
     setError("");
+    const sentToken = captchaToken.current;
     try {
       const response = await api(registering ? "/auth/register" : "/auth/login", {
         method: "POST",
@@ -46,18 +53,24 @@ export function AuthPanel({
           username: value("username"),
           robloxUsername: value("robloxUsername") || undefined,
           password,
-          turnstileToken: captchaToken.current || undefined
+          licenseKey,
+          turnstileToken: sentToken || undefined
         } : {
           emailOrUsername: value("emailOrUsername"),
           password,
           totp: value("totp") || undefined,
-          turnstileToken: captchaToken.current || undefined
+          turnstileToken: sentToken || undefined
         })
       });
       const result = await json<{ user: User }>(response);
       onDone(result.user);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Authentication failed");
+      setError(authErrorMessage(caught));
+      if (turnstileSiteKey && sentToken) {
+        // Tokens are single-use; force a fresh widget for the next attempt.
+        captchaToken.current = "";
+        setCaptchaEpoch((epoch) => epoch + 1);
+      }
     } finally {
       setBusy(false);
     }
@@ -65,7 +78,7 @@ export function AuthPanel({
 
   function switchMode() {
     captchaToken.current = "";
-    setCaptchaVisible(false);
+    setCaptchaEpoch((epoch) => epoch + 1);
     setError("");
     setMode(registering ? "login" : "register");
   }
@@ -81,6 +94,7 @@ export function AuthPanel({
           <>
             <Field label="Email" name="email" type="email" autoComplete="email" required />
             <Field label="Username" name="username" autoComplete="username" minLength={3} maxLength={32} required />
+            <Field label="License key" name="licenseKey" autoComplete="off" spellCheck={false} minLength={8} maxLength={128} required defaultValue={initialLicenseKey} />
             <Field label="Roblox username (optional)" name="robloxUsername" autoComplete="off" maxLength={64} />
           </>
         ) : (
@@ -89,7 +103,7 @@ export function AuthPanel({
         <Field label="Password" name="password" type="password" autoComplete={registering ? "new-password" : "current-password"} minLength={registering ? 8 : 1} maxLength={128} required />
         {registering && <Field label="Confirm password" name="confirmPassword" type="password" autoComplete="new-password" minLength={8} maxLength={128} required />}
         {!registering && <Field label="2FA code (if enabled)" name="totp" inputMode="numeric" autoComplete="one-time-code" />}
-        {turnstileSiteKey && captchaVisible && <Turnstile onToken={(token) => { captchaToken.current = token; }} />}
+        {turnstileSiteKey && <Turnstile key={captchaEpoch} onToken={(token) => { captchaToken.current = token; }} />}
         {error && <p className="auth-error" role="alert">{error}</p>}
         <button className="auth-submit" type="submit" disabled={busy}>{busy ? "Please wait..." : registering ? "Create Account" : "Sign In"}</button>
       </form>

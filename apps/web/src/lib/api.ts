@@ -78,9 +78,31 @@ export type PaymentRow = {
   currency: string;
   status: string;
   createdAt: string;
+  proofUrl?: string | null;
   user?: { email?: string | null; username?: string | null } | null;
   license?: { keyPreview: string } | null;
 };
+
+export class ApiError extends Error {
+  readonly code: string;
+  constructor(message: string, code = "REQUEST_FAILED") {
+    super(message);
+    this.name = "ApiError";
+    this.code = code;
+  }
+}
+
+function parseApiError(body: unknown): ApiError {
+  const err = (body as { error?: unknown } | null)?.error;
+  if (typeof err === "string") return new ApiError(err, err);
+  if (err && typeof err === "object") {
+    const shape = err as { code?: unknown; message?: unknown };
+    const code = typeof shape.code === "string" ? shape.code : "";
+    const message = typeof shape.message === "string" ? shape.message : "";
+    return new ApiError(message || code || "Request failed", code || "REQUEST_FAILED");
+  }
+  return new ApiError("Request failed");
+}
 
 export function api(path: string, init: RequestInit = {}) {
   return fetch(`${apiUrl}${path}`, {
@@ -95,9 +117,28 @@ export function api(path: string, init: RequestInit = {}) {
 }
 
 export async function json<T>(response: Response): Promise<T> {
-  const body = await response.json();
-  if (!response.ok || !body.ok) throw new Error(body?.error?.message ?? "Request failed");
-  return body.data;
+  let body: unknown = null;
+  try {
+    body = await response.json();
+  } catch {
+    // non-JSON body falls through to the generic error below
+  }
+  const envelope = body as { ok?: unknown; data?: unknown } | null;
+  if (!response.ok || !envelope?.ok) throw parseApiError(body);
+  return envelope.data as T;
+}
+
+const AUTH_ERROR_LABELS: Record<string, string> = {
+  CAPTCHA_REQUIRED: "Captcha wajib diselesaikan · Captcha verification required",
+  BAD_LICENSE: "License key salah / tidak aktif · License key is invalid or inactive",
+  LICENSE_CLAIMED: "License key sudah terpakai · License key already claimed by an account",
+};
+
+export function authErrorMessage(error: unknown, fallback = "Authentication failed"): string {
+  const known = error instanceof ApiError ? AUTH_ERROR_LABELS[error.code] : undefined;
+  if (known) return known;
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
 }
 
 export async function me() {

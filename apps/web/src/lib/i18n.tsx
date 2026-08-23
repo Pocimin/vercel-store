@@ -12,6 +12,7 @@ const en: Dict = {
 
   contact: "Contact",
   dashboard: "Dashboard",
+  redeem: "Redeem",
   // Hero
   tagline: "The #1 Script Hub for Roblox.",
   getStarted: "Get started",
@@ -154,6 +155,7 @@ const id: Dict = {
 
   contact: "Kontak",
   dashboard: "Dasbor",
+  redeem: "Tukar",
   tagline: "Script Hub #1 untuk Roblox.",
   getStarted: "Mulai sekarang",
   buyPremium: "Beli Premium",

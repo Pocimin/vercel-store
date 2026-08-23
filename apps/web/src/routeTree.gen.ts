@@ -15,6 +15,9 @@ import { Route as PurchaseRouteImport } from './routes/purchase'
 import { Route as FreeRouteImport } from './routes/free'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as IndexRouteImport } from './routes/index'
 
 const RedeemRoute = RedeemRouteImport.update({
@@ -47,6 +50,21 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -59,8 +77,11 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/dashboard': typeof DashboardRoute
   '/free': typeof FreeRoute
+  '/privacy': typeof PrivacyRoute
   '/purchase': typeof PurchaseRoute
   '/redeem': typeof RedeemRoute
+  '/register': typeof RegisterRoute
+  '/terms': typeof TermsRoute
 }
 export interface FileRoutesByTo {
   '/bio': typeof BioRoute
@@ -68,8 +89,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/dashboard': typeof DashboardRoute
   '/free': typeof FreeRoute
+  '/privacy': typeof PrivacyRoute
   '/purchase': typeof PurchaseRoute
   '/redeem': typeof RedeemRoute
+  '/register': typeof RegisterRoute
+  '/terms': typeof TermsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,8 +101,11 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/dashboard': typeof DashboardRoute
   '/free': typeof FreeRoute
+  '/privacy': typeof PrivacyRoute
   '/purchase': typeof PurchaseRoute
   '/redeem': typeof RedeemRoute
+  '/register': typeof RegisterRoute
+  '/terms': typeof TermsRoute
   '/bio': typeof BioRoute
 }
 export interface FileRouteTypes {
@@ -89,8 +116,11 @@ export interface FileRouteTypes {
     | '/bio'
     | '/dashboard'
     | '/free'
+    | '/privacy'
     | '/purchase'
     | '/redeem'
+    | '/register'
+    | '/terms'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -98,8 +128,11 @@ export interface FileRouteTypes {
     | '/bio'
     | '/dashboard'
     | '/free'
+    | '/privacy'
     | '/purchase'
     | '/redeem'
+    | '/register'
+    | '/terms'
   id:
     | '__root__'
     | '/'
@@ -107,8 +140,11 @@ export interface FileRouteTypes {
     | '/bio'
     | '/dashboard'
     | '/free'
+    | '/privacy'
     | '/purchase'
     | '/redeem'
+    | '/register'
+    | '/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -117,8 +153,11 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   DashboardRoute: typeof DashboardRoute
   FreeRoute: typeof FreeRoute
+  PrivacyRoute: typeof PrivacyRoute
   PurchaseRoute: typeof PurchaseRoute
   RedeemRoute: typeof RedeemRoute
+  RegisterRoute: typeof RegisterRoute
+  TermsRoute: typeof TermsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -128,6 +167,27 @@ declare module '@tanstack/react-router' {
       path: '/bio'
       fullPath: '/bio'
       preLoaderRoute: typeof BioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -181,8 +241,11 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   DashboardRoute: DashboardRoute,
   FreeRoute: FreeRoute,
+  PrivacyRoute: PrivacyRoute,
   PurchaseRoute: PurchaseRoute,
   RedeemRoute: RedeemRoute,
+  RegisterRoute: RegisterRoute,
+  TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

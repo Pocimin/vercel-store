@@ -57,6 +57,9 @@ export function Nav() {
             <Link to="/purchase" className="transition-colors hover:text-foreground">{t("purchase")}</Link>
           </li>
           <li>
+            <Link to="/redeem" className="transition-colors hover:text-foreground">{t("redeem")}</Link>
+          </li>
+          <li>
             <Link to="/dashboard" className="transition-colors hover:text-foreground">{t("dashboard")}</Link>
           </li>
           <li className="hidden sm:block">
@@ -352,8 +355,8 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
         <p>© {new Date().getFullYear()} nznt's hub. {t("rights")}</p>
         <div className="flex gap-6">
-          <a href="#" className="hover:text-foreground">{t("terms")}</a>
-          <a href="#" className="hover:text-foreground">{t("privacy")}</a>
+          <Link to="/terms" className="hover:text-foreground">{t("terms")}</Link>
+          <Link to="/privacy" className="hover:text-foreground">{t("privacy")}</Link>
           <a href="https://discord.gg/nznt" target="_blank" rel="noreferrer" className="hover:text-foreground">
             {t("contact")}
           </a>

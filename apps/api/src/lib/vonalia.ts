@@ -70,6 +70,13 @@ export async function createVonaliaUser(plan: string, expiresAt: Date, note: str
   return { key, userId };
 }
 
+export function vonaliaExpiresAt(user: VonaliaUser) {
+  const rawExpiration = Number(user.expiration);
+  if (!Number.isFinite(rawExpiration) || rawExpiration <= 0) return null;
+  const expiration = rawExpiration < 1_000_000_000_000 ? rawExpiration * 1000 : rawExpiration;
+  return new Date(expiration);
+}
+
 export function vonaliaStatus(user: VonaliaUser) {
   const truthy = (value: unknown) => value === true || String(value).toLowerCase() === "true" || value === 1 || value === "1";
   if (truthy(user.ban) || truthy(user.freeze) || user.active === false || String(user.active).toLowerCase() === "false") return "SUSPENDED" as const;

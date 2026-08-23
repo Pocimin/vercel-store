@@ -1,7 +1,4 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join, resolve, sep } from "node:path";
-import { z } from "zod";
 import { ScriptBuildStatus, SessionStatus, UserRole, db } from "@nznt/db";
 import { assertServiceToken } from "@nznt/auth";
 import { env } from "../env.js";
@@ -13,15 +10,6 @@ function requireServiceToken(request: FastifyRequest) {
   const token = header?.startsWith("Bearer ") ? header.slice("Bearer ".length) : undefined;
   return assertServiceToken(token, env.INTERNAL_SERVICE_TOKEN);
 }
-
-const scriptUploadSchema = z.object({
-  fileName: z.string().regex(/^[a-zA-Z0-9_. -]+\.lua$/),
-  game: z.string().min(1).default("unknown"),
-  type: z.string().min(1).default("roblox"),
-  channel: z.string().min(1).default("stable"),
-  version: z.string().regex(/^[a-zA-Z0-9._-]{1,64}$/),
-  source: z.string().min(1).max(3_000_000)
-});
 
 const adminRoles: UserRole[] = [UserRole.SUPPORT, UserRole.ADMIN, UserRole.OWNER];
 
@@ -48,13 +36,29 @@ export async function registerAdminRoutes(app: FastifyInstance) {
       orderBy: { lastSeenAt: "desc" },
       take: 100,
       include: {
-        user: true,
-        license: true,
-        script: true
+        script: { select: { fileName: true } },
+        events: { where: { type: "heartbeat" }, orderBy: { createdAt: "desc" }, take: 1, select: { payload: true } }
       }
     });
 
-    return { ok: true, data: sessions };
+    return {
+      ok: true,
+      data: sessions.map((session) => {
+        const payload = session.events[0]?.payload;
+        const stats = payload && typeof payload === "object" && !Array.isArray(payload)
+          ? payload as Record<string, unknown>
+          : null;
+        return {
+          id: session.id,
+          status: session.status,
+          userId: session.userId,
+          scriptFile: session.script?.fileName ?? null,
+          startedAt: session.startedAt,
+          lastSeenAt: session.lastSeenAt,
+          earnings: stats?.earnings ?? null
+        };
+      })
+    };
   });
 
   app.get("/admin/monitoring", async () => {
@@ -112,76 +116,6 @@ export async function registerAdminRoutes(app: FastifyInstance) {
     });
 
     return { ok: true, data: scripts };
-  });
-
-  app.post("/admin/scripts/upload", { preHandler: requireBrowserRequest }, async (request, reply) => {
-    const input = scriptUploadSchema.parse(request.body);
-    const script = await db.script.upsert({
-      where: { fileName: input.fileName },
-      update: {
-        game: input.game,
-        type: input.type,
-        channel: input.channel
-      },
-      create: {
-        fileName: input.fileName,
-        game: input.game,
-        type: input.type,
-        channel: input.channel
-      }
-    });
-
-    const rawRoot = resolve(env.SCRIPT_RAW_ROOT);
-    const rawDir = resolve(rawRoot, script.id);
-    if (!rawDir.startsWith(`${rawRoot}${sep}`)) {
-      return reply.status(400).send({ ok: false, error: { code: "INVALID_PATH", message: "Invalid script path" } });
-    }
-    await mkdir(rawDir, { recursive: true });
-    const sourcePath = resolve(rawDir, `${input.version}.lua`);
-    await writeFile(sourcePath, input.source, "utf8");
-
-    const build = await db.scriptBuild.upsert({
-      where: {
-        scriptId_version: {
-          scriptId: script.id,
-          version: input.version
-        }
-      },
-      update: {
-        status: ScriptBuildStatus.QUEUED,
-        sourcePath,
-        obfuscatedPath: null,
-        checksum: null,
-        error: null,
-        obfuscator: "prometheus"
-      },
-      create: {
-        scriptId: script.id,
-        version: input.version,
-        status: ScriptBuildStatus.QUEUED,
-        sourcePath,
-        obfuscator: "prometheus"
-      }
-    });
-
-    await db.auditLog.create({
-      data: {
-        actorType: "admin_service",
-        action: "script.upload",
-        targetType: "script_build",
-        targetId: build.id,
-        payload: {
-          fileName: input.fileName,
-          version: input.version,
-          preset: env.PROMETHEUS_PRESET
-        }
-      }
-    });
-
-    return reply.status(202).send({
-      ok: true,
-      data: { script, build }
-    });
   });
 
   app.post<{ Params: { id: string }; Body: { reason?: string } }>("/admin/sessions/:id/kick", { preHandler: requireBrowserRequest }, async (request) => {

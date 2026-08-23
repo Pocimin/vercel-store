@@ -39,6 +39,8 @@ enum PaymentStatus {
   APPROVED
   REJECTED
   REFUNDED
+  PAID
+  EXPIRED
 }
 
 enum SessionStatus {
@@ -217,6 +219,7 @@ model Payment {
   id              String        @id @default(cuid())
   userId          String?
   licenseId       String?
+  buyerEmail      String?
   plan            String
   method          String
   amount          Int
@@ -224,6 +227,12 @@ model Payment {
   proofUrl        String?
   status          PaymentStatus @default(PENDING)
   discordMessageId String?
+  orderSn         String?       @unique
+  provider        String?
+  qrUrl           String?
+  qrString        String?
+  autoPaidAt      DateTime?
+  providerPaidAt  String?
   processedById   String?
   processedAt     DateTime?
   createdAt        DateTime     @default(now())

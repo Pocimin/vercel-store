@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createContext, useContext, useEffect, useState } from "react";
 import {
   Home,
@@ -50,7 +50,7 @@ function useNav() {
   ];
 }
 
-function Sidebar({ tab, setTab, signOut }: { tab: Tab; setTab: (t: Tab) => void; signOut: () => void }) {
+function Sidebar({ tab, setTab, signOut, signingOut }: { tab: Tab; setTab: (t: Tab) => void; signOut: () => void; signingOut: boolean }) {
   const { t } = useI18n();
   const NAV = useNav();
   return (
@@ -80,9 +80,9 @@ function Sidebar({ tab, setTab, signOut }: { tab: Tab; setTab: (t: Tab) => void;
         })}
       </nav>
       <div className="mt-8 border-t border-white/5 pt-4">
-        <button onClick={signOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/[0.03] hover:text-foreground">
+        <button onClick={signOut} disabled={signingOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/[0.03] hover:text-foreground disabled:opacity-50">
           <LogOut className="h-4 w-4" />
-          {t("signOut")}
+          {signingOut ? "Signing out..." : t("signOut")}
         </button>
       </div>
     </aside>
@@ -423,6 +423,9 @@ function Dashboard() {
   const [tab, setTab] = useState<Tab>("overview");
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
   const NAV = useNav();
 
   async function load() {
@@ -435,8 +438,20 @@ function Dashboard() {
   }
 
   async function signOut() {
-    await api("/auth/logout", { method: "POST" });
-    setData(null);
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await api("/auth/logout", { method: "POST" });
+    } catch {
+      // Network/CORS failure must not trap the user in the session.
+    } finally {
+      try {
+        localStorage.removeItem("nznt_admin_token");
+      } catch {}
+      setData(null);
+      setError("");
+      void navigate({ to: "/" });
+    }
   }
 
   useEffect(() => {
@@ -460,7 +475,7 @@ function Dashboard() {
   return (
     <DashboardContext.Provider value={data}>
       <div className="flex min-h-screen bg-[#0a0a0a]">
-        <Sidebar tab={tab} setTab={setTab} signOut={signOut} />
+        <Sidebar tab={tab} setTab={setTab} signOut={signOut} signingOut={signingOut} />
         <div className="flex-1">
           <header className="flex items-center justify-between border-b border-white/5 bg-[#0e0e0e] px-6 py-4">
             <div className="flex items-center gap-2 md:hidden">
@@ -471,8 +486,35 @@ function Dashboard() {
               Signed in as <span className="text-foreground">{displayName}</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[oklch(0.66_0.23_25)] to-[oklch(0.78_0.18_55)] text-sm font-bold text-black">
-                {displayName.slice(0, 1).toUpperCase()}
+              <Link to="/redeem" className="hidden text-sm text-muted-foreground transition hover:text-foreground sm:block">
+                Redeem
+              </Link>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[oklch(0.66_0.23_25)] to-[oklch(0.78_0.18_55)] text-sm font-bold text-black transition-transform hover:-translate-y-0.5"
+                >
+                  {displayName.slice(0, 1).toUpperCase()}
+                </button>
+                {menuOpen && (
+                  <>
+                    <button type="button" className="fixed inset-0 z-10 cursor-default" aria-label="Close menu" onClick={() => setMenuOpen(false)} />
+                    <div role="menu" className="absolute right-0 z-20 mt-2 w-44 rounded-xl border border-white/10 bg-[#141414] p-1.5 shadow-xl">
+                      <Link to="/redeem" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-foreground transition hover:bg-white/[0.06]">
+                        Redeem
+                      </Link>
+                      <Link to="/terms" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/[0.06] hover:text-foreground">
+                        Terms
+                      </Link>
+                      <Link to="/privacy" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/[0.06] hover:text-foreground">
+                        Privacy
+                      </Link>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </header>

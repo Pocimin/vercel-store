@@ -1,18 +1,20 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply } from "fastify";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { authenticator } from "otplib";
 import { z } from "zod";
-import { LicenseStatus, UserRole, db } from "@nznt/db";
-import { hashPassword, hashSecret, signSession, verifyPassword } from "@nznt/auth";
+import { LicenseSource, LicenseStatus, Prisma, UserRole, db, type User } from "@nznt/db";
+import { encryptSecret, hashPassword, hashSecret, previewSecret, signSession, verifyPassword } from "@nznt/auth";
 import { env } from "../env.js";
 import { clearDiscordOAuthStateCookie, clearSessionCookie, getCookie, requireAdminUser, requireUser, setDiscordOAuthStateCookie, setSessionCookie } from "../lib/session.js";
 import { verifyTurnstile } from "../lib/turnstile.js";
 import { requireBrowserRequest } from "../lib/csrf.js";
+import { findVonaliaUser, vonaliaExpiresAt, vonaliaStatus } from "../lib/vonalia.js";
 
 const registerSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3).max(32),
   password: z.string().min(8),
+  licenseKey: z.string().min(8).max(128),
   robloxUsername: z.string().min(1).max(64).optional(),
   turnstileToken: z.string().optional()
 });
@@ -29,10 +31,139 @@ const redeemSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3).max(32),
   password: z.string().min(8),
-  robloxUsername: z.string().min(1).max(64).optional()
+  robloxUsername: z.string().min(1).max(64).optional(),
+  turnstileToken: z.string().optional()
+});
+
+const verifyKeySchema = z.object({
+  licenseKey: z.string().min(8).max(128)
 });
 
 const authRateLimit = { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } };
+
+function parseBody<T>(schema: z.ZodType<T>, body: unknown, reply: FastifyReply): T | undefined {
+  const result = schema.safeParse(body);
+  if (!result.success) {
+    reply.status(400).send({ ok: false, error: { code: "BAD_REQUEST", message: "Invalid request body" } });
+    return undefined;
+  }
+  return result.data;
+}
+
+const TOTP_FAIL_LIMIT = 5;
+const TOTP_LOCK_MS = 15 * 60 * 1000;
+const totpFails = new Map<string, { fails: number; until: number }>();
+
+function totpIsLocked(userId: string): boolean {
+  const entry = totpFails.get(userId);
+  if (!entry) return false;
+  if (entry.until > 0) {
+    if (entry.until <= Date.now()) {
+      totpFails.delete(userId);
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+function recordTotpFailure(userId: string): void {
+  const entry = totpFails.get(userId);
+  const fails = (entry?.fails ?? 0) + 1;
+  totpFails.set(userId, { fails, until: fails >= TOTP_FAIL_LIMIT ? Date.now() + TOTP_LOCK_MS : 0 });
+}
+
+function clearTotpFailures(userId: string): void {
+  totpFails.delete(userId);
+}
+
+type ClaimResolution =
+  | { kind: "local"; licenseId: string; keyHash: string; keyPreview: string; plan: string }
+  | { kind: "provider"; key: string; keyHash: string; keyPreview: string; plan: string; providerExpiresAt: Date | null };
+
+class LicenseClaimError extends Error {
+  constructor() {
+    super("License already claimed");
+  }
+}
+
+function isLicenseClaimConflict(error: unknown): boolean {
+  if (error instanceof LicenseClaimError) return true;
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return false;
+  const target = Array.isArray(error.meta?.target) ? error.meta.target.join(",") : String(error.meta?.target ?? "");
+  return !/(email|username)/i.test(target);
+}
+
+function isAccountConflict(error: unknown): boolean {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return false;
+  const target = Array.isArray(error.meta?.target) ? error.meta.target.join(",") : String(error.meta?.target ?? "");
+  return /(email|username)/i.test(target);
+}
+
+async function resolveLicenseForClaim(rawKey: string): Promise<ClaimResolution | "claimed" | "invalid"> {
+  const key = rawKey.trim().toUpperCase();
+  const keyHash = hashSecret(key, env.SCRIPT_SIGNING_SECRET);
+
+  const license = await db.license.findUnique({ where: { keyHash } });
+  if (license) {
+    if (license.userId) return "claimed";
+    if (license.status !== LicenseStatus.ACTIVE || (license.expiresAt && license.expiresAt <= new Date())) {
+      return "invalid";
+    }
+    return { kind: "local", licenseId: license.id, keyHash, keyPreview: license.keyPreview, plan: license.plan };
+  }
+
+  try {
+    const remote = await findVonaliaUser(key);
+    if (vonaliaStatus(remote) !== "ACTIVE") return "invalid";
+    const providerExpiresAt = vonaliaExpiresAt(remote);
+    if (providerExpiresAt && providerExpiresAt.getTime() <= Date.now()) return "invalid";
+    return { kind: "provider", key, keyHash, keyPreview: previewSecret(key), plan: "vonalia", providerExpiresAt };
+  } catch {
+    return "invalid";
+  }
+}
+
+async function createUserWithLicense(
+  input: { email: string; username: string; password: string; robloxUsername?: string | undefined },
+  resolution: Exclude<ClaimResolution, string>
+) {
+  return db.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: {
+        email: input.email.toLowerCase(),
+        username: input.username,
+        displayName: input.username,
+        passwordHash: await hashPassword(input.password),
+        robloxUsername: input.robloxUsername ?? null
+      }
+    });
+
+    if (resolution.kind === "local") {
+      const claimed = await tx.license.updateMany({
+        where: { id: resolution.licenseId, userId: null },
+        data: { userId: created.id }
+      });
+      if (claimed.count === 0) throw new LicenseClaimError();
+    } else {
+      await tx.license.create({
+        data: {
+          userId: created.id,
+          keyHash: resolution.keyHash,
+          keyPreview: resolution.keyPreview,
+          keyCiphertext: encryptSecret(resolution.key, env.SCRIPT_SIGNING_SECRET),
+          providerUserCiphertext: encryptSecret(resolution.key, env.SCRIPT_SIGNING_SECRET),
+          plan: resolution.plan,
+          source: LicenseSource.IMPORT,
+          maxDevices: 1,
+          expiresAt: resolution.providerExpiresAt
+        }
+      });
+    }
+
+    return created;
+  });
+}
 
 export async function registerAuthRoutes(app: FastifyInstance) {
   const decoyPasswordHash = await hashPassword(randomBytes(24).toString("hex"));
@@ -40,7 +171,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
   app.post("/auth/register", { ...authRateLimit, preHandler: requireBrowserRequest }, async (request, reply) => {
     const input = registerSchema.parse(request.body);
     if (!(await verifyTurnstile(input.turnstileToken, request.ip))) {
-      return reply.status(400).send({ ok: false, error: { code: "CAPTCHA_FAILED", message: "Captcha verification failed" } });
+      return reply.status(403).send({ ok: false, error: { code: "CAPTCHA_REQUIRED", message: "Captcha verification failed" } });
     }
 
     const email = input.email.toLowerCase();
@@ -52,22 +183,23 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       return reply.status(409).send({ ok: false, error: { code: "ACCOUNT_EXISTS", message: "An account with that email or username already exists." } });
     }
 
-    const passwordHash = await hashPassword(input.password);
+    const resolution = await resolveLicenseForClaim(input.licenseKey);
+    if (resolution === "claimed") {
+      return reply.status(409).send({ ok: false, error: { code: "LICENSE_CLAIMED", message: "This license already belongs to an account. Sign in with the purchase account." } });
+    }
+    if (resolution === "invalid") {
+      return reply.status(403).send({ ok: false, error: { code: "BAD_LICENSE", message: "License key is invalid, expired, or inactive" } });
+    }
 
     let user;
     try {
-      user = await db.user.create({
-        data: {
-          email,
-          username: input.username,
-          displayName: input.username,
-          passwordHash,
-          robloxUsername: input.robloxUsername ?? null
-        }
-      });
+      user = await createUserWithLicense(input, resolution);
     } catch (error) {
-      if (isUniqueViolation(error)) {
+      if (isAccountConflict(error)) {
         return reply.status(409).send({ ok: false, error: { code: "ACCOUNT_EXISTS", message: "An account with that email or username already exists." } });
+      }
+      if (isLicenseClaimConflict(error)) {
+        return reply.status(409).send({ ok: false, error: { code: "LICENSE_CLAIMED", message: "This license already belongs to an account. Sign in with the purchase account." } });
       }
       throw error;
     }
@@ -80,7 +212,7 @@ export async function registerAuthRoutes(app: FastifyInstance) {
   app.post("/auth/login", { ...authRateLimit, preHandler: requireBrowserRequest }, async (request, reply) => {
     const input = loginSchema.parse(request.body);
     if (!(await verifyTurnstile(input.turnstileToken, request.ip))) {
-      return reply.status(400).send({ ok: false, error: { code: "CAPTCHA_FAILED", message: "Captcha verification failed" } });
+      return reply.status(403).send({ ok: false, error: { code: "CAPTCHA_REQUIRED", message: "Captcha verification failed" } });
     }
     const identifier = input.emailOrUsername.toLowerCase();
     const user = await db.user.findFirst({
@@ -98,9 +230,17 @@ export async function registerAuthRoutes(app: FastifyInstance) {
     }
 
     if (user.twoFactorEnabled) {
-      if (!input.totp || !user.twoFactorSecret || !authenticator.check(input.totp, user.twoFactorSecret)) {
+      if (!input.totp) {
         return reply.status(401).send({ ok: false, error: { code: "TOTP_REQUIRED", message: "Valid 2FA code required" } });
       }
+      if (totpIsLocked(user.id)) {
+        return reply.status(429).send({ ok: false, error: { code: "TOTP_LOCKED", message: "Too many failed 2FA attempts. Try again in 15 minutes." } });
+      }
+      if (!user.twoFactorSecret || !authenticator.check(input.totp, user.twoFactorSecret)) {
+        recordTotpFailure(user.id);
+        return reply.status(401).send({ ok: false, error: { code: "TOTP_REQUIRED", message: "Valid 2FA code required" } });
+      }
+      clearTotpFailures(user.id);
     }
 
     const token = await signSession({ userId: user.id, role: user.role }, env.SESSION_SECRET);
@@ -110,33 +250,49 @@ export async function registerAuthRoutes(app: FastifyInstance) {
 
   app.post("/auth/redeem", { ...authRateLimit, preHandler: requireBrowserRequest }, async (request, reply) => {
     const input = redeemSchema.parse(request.body);
-    const keyHash = hashSecret(input.licenseKey.trim().toUpperCase(), env.SCRIPT_SIGNING_SECRET);
-    const license = await db.license.findUnique({ where: { keyHash } });
-
-    if (!license || license.status !== LicenseStatus.ACTIVE || (license.expiresAt && license.expiresAt <= new Date())) {
-      return reply.status(400).send({ ok: false, error: { code: "BAD_LICENSE", message: "License key is invalid, expired, or inactive" } });
+    if (!(await verifyTurnstile(input.turnstileToken, request.ip))) {
+      return reply.status(403).send({ ok: false, error: { code: "CAPTCHA_REQUIRED", message: "Captcha verification failed" } });
     }
-    if (license.userId) {
+
+    const resolution = await resolveLicenseForClaim(input.licenseKey);
+    if (resolution === "claimed") {
       return reply.status(409).send({ ok: false, error: { code: "LICENSE_CLAIMED", message: "This license already belongs to an account. Sign in with the purchase account." } });
     }
+    if (resolution === "invalid") {
+      return reply.status(400).send({ ok: false, error: { code: "BAD_LICENSE", message: "License key is invalid, expired, or inactive" } });
+    }
 
-    const user = await db.$transaction(async (tx) => {
-      const created = await tx.user.create({
-        data: {
-          email: input.email.toLowerCase(),
-          username: input.username,
-          displayName: input.username,
-          passwordHash: await hashPassword(input.password),
-          robloxUsername: input.robloxUsername ?? null
-        }
-      });
-      await tx.license.update({ where: { id: license.id }, data: { userId: created.id } });
-      return created;
-    });
+    let user;
+    try {
+      user = await createUserWithLicense(input, resolution);
+    } catch (error) {
+      if (isAccountConflict(error)) {
+        return reply.status(409).send({ ok: false, error: { code: "ACCOUNT_EXISTS", message: "An account with that email or username already exists." } });
+      }
+      if (isLicenseClaimConflict(error)) {
+        return reply.status(409).send({ ok: false, error: { code: "LICENSE_CLAIMED", message: "This license already belongs to an account. Sign in with the purchase account." } });
+      }
+      throw error;
+    }
 
     const token = await signSession({ userId: user.id, role: user.role }, env.SESSION_SECRET);
     setSessionCookie(reply, token);
     return reply.status(201).send({ ok: true, data: { user: sanitizeUser(user) } });
+  });
+
+  app.post("/auth/verify-key", { ...authRateLimit, preHandler: requireBrowserRequest }, async (request, reply) => {
+    const input = parseBody(verifyKeySchema, request.body, reply);
+    if (!input) return;
+
+    const resolution = await resolveLicenseForClaim(input.licenseKey);
+    if (resolution === "claimed") {
+      return reply.status(409).send({ ok: false, error: { code: "LICENSE_CLAIMED", message: "This license already belongs to an account. Sign in with the purchase account." } });
+    }
+    if (resolution === "invalid") {
+      return reply.status(403).send({ ok: false, error: { code: "BAD_LICENSE", message: "License key is invalid, expired, or inactive" } });
+    }
+
+    return { ok: true, data: { valid: true, keyPreview: resolution.keyPreview, plan: resolution.plan } };
   });
 
   app.post("/auth/logout", { preHandler: requireBrowserRequest }, async (_request, reply) => {
@@ -217,12 +373,27 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       username?: string;
       global_name?: string | null;
       email?: string | null;
+      verified?: boolean;
     };
 
     const email = discord.email?.toLowerCase() ?? null;
     const byDiscord = await db.user.findUnique({ where: { discordId: discord.id } });
-    const byEmail = !byDiscord && email ? await db.user.findUnique({ where: { email } }) : null;
-    const existing = byDiscord ?? (byEmail?.discordId ? null : byEmail);
+
+    let existing: User | null = byDiscord;
+    if (!existing && email) {
+      const byEmail = await db.user.findUnique({ where: { email } });
+      if (byEmail) {
+        if (discord.verified !== true) {
+          clearDiscordOAuthStateCookie(reply);
+          return reply.status(403).send({ ok: false, error: { code: "EMAIL_NOT_VERIFIED", message: "Your Discord email must be verified before signing in" } });
+        }
+        if (byEmail.discordId && byEmail.discordId !== discord.id) {
+          clearDiscordOAuthStateCookie(reply);
+          return reply.status(409).send({ ok: false, error: { code: "ACCOUNT_LINK_CONFLICT", message: "This email belongs to an account linked to a different Discord user" } });
+        }
+        existing = byEmail;
+      }
+    }
 
     const user = existing
       ? await db.user.update({
@@ -290,10 +461,6 @@ export async function registerAuthRoutes(app: FastifyInstance) {
 
     return { ok: true, data: { user: sanitizeUser(updated) } };
   });
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === "P2002";
 }
 
 function sanitizeUser(user: {

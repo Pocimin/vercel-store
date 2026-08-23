@@ -13,32 +13,28 @@ export function getCookie(request: FastifyRequest, name: string): string | undef
   return undefined;
 }
 
-function addSetCookie(reply: FastifyReply, value: string) {
-  const current = typeof (reply as FastifyReply & { getHeader?: (name: string) => unknown }).getHeader === "function"
-    ? (reply as FastifyReply & { getHeader: (name: string) => unknown }).getHeader("set-cookie")
-    : undefined;
-  const values = Array.isArray(current) ? current.map(String) : current ? [String(current)] : [];
-  reply.header("set-cookie", [...values, value]);
-}
-
-function cookie(name: string, value: string, options: string) {
-  return `${name}=${encodeURIComponent(value)}; ${options}`;
-}
-
 export function setSessionCookie(reply: FastifyReply, token: string) {
-  addSetCookie(reply, cookie("nznt_session", token, `Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}${env.NODE_ENV === "production" ? "; Secure" : ""}`));
+  reply.header(
+    "set-cookie",
+    `nznt_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}${env.NODE_ENV === "production" ? "; Secure" : ""}`
+  );
 }
 
 export function clearSessionCookie(reply: FastifyReply) {
-  addSetCookie(reply, "nznt_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+  reply.header("set-cookie", "nznt_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
 }
 
+const OAUTH_STATE_COOKIE = "nznt_discord_oauth_state";
+
 export function setDiscordOAuthStateCookie(reply: FastifyReply, state: string) {
-  addSetCookie(reply, cookie("nznt_discord_oauth_state", state, `Path=/; HttpOnly; SameSite=Lax; Max-Age=600${env.NODE_ENV === "production" ? "; Secure" : ""}`));
+  reply.header(
+    "set-cookie",
+    `${OAUTH_STATE_COOKIE}=${encodeURIComponent(state)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 10}${env.NODE_ENV === "production" ? "; Secure" : ""}`
+  );
 }
 
 export function clearDiscordOAuthStateCookie(reply: FastifyReply) {
-  addSetCookie(reply, "nznt_discord_oauth_state=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+  reply.header("set-cookie", `${OAUTH_STATE_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
 }
 
 export async function getCurrentUser(request: FastifyRequest): Promise<User | null> {

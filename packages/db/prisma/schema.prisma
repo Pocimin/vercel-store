@@ -91,6 +91,9 @@ model License {
   keyHash        String        @unique
   keyPreview     String
   keyCiphertext  String?
+  intendedExpiresAt DateTime?
+  providerExpiresAt DateTime?
+  issuedAt DateTime?
   providerUserCiphertext String?
   plan           String
   status         LicenseStatus @default(ACTIVE)

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Activity, CheckCircle2, FileUp, Receipt, Shield, XCircle } from "lucide-react";
 import { AuthPanel } from "@/components/AuthPanel";
 import { api, apiUrl, formatDateTime, formatMoney, json, type MonitoringData, type PaymentRow } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -50,6 +51,7 @@ function sessionStats(value: unknown) {
 }
 
 function AdminPage() {
+  const { t } = useI18n();
   const [token, setToken] = useState(() => localStorage.getItem("nznt_admin_token") ?? "");
   const [monitoring, setMonitoring] = useState<MonitoringData | null>(null);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
@@ -73,7 +75,7 @@ function AdminPage() {
   }
 
   useEffect(() => {
-    load().catch((err) => setError(err instanceof Error ? err.message : "Admin login required"));
+    load().catch((err) => setError(err instanceof Error && err.message ? err.message : t("adminLoginRequired")));
     if (!monitoring) return;
     const timer = window.setInterval(() => load().catch(() => undefined), 10_000);
     return () => window.clearInterval(timer);
@@ -84,10 +86,10 @@ function AdminPage() {
     setError("");
     try {
       const result = await json<{ plainKey: string }>(await api(`/admin/payments/${id}/approve`, { method: "POST", headers }));
-      setNotice(`Payment approved. License created: ${result.plainKey}`);
+      setNotice(`${t("approvedNotice")} ${t("licenseCreated")}: ${result.plainKey}`);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Payment approval failed");
+      setError(err instanceof Error && err.message ? err.message : t("approveFailed"));
     } finally {
       setProcessingId(null);
     }
@@ -98,10 +100,10 @@ function AdminPage() {
     setError("");
     try {
       await json(await api(`/admin/payments/${id}/reject`, { method: "POST", headers }));
-      setNotice("Payment rejected.");
+      setNotice(t("rejectedNotice"));
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Payment rejection failed");
+      setError(err instanceof Error && err.message ? err.message : t("rejectFailed"));
     } finally {
       setProcessingId(null);
     }
@@ -120,12 +122,12 @@ function AdminPage() {
     <div className="min-h-screen bg-[#0a0a0a]">
       <header className="flex items-center justify-between border-b border-white/5 bg-[#0e0e0e] px-6 py-4">
         <Link to="/" className="flex items-center gap-2 text-base font-extrabold tracking-tight text-foreground"><img src="/nznt-logo.png" alt="" className="h-7 w-7 rounded-md object-cover" />nznt's hub</Link>
-        <Link to="/dashboard" className="text-sm text-muted-foreground transition hover:text-foreground">Dashboard</Link>
+        <Link to="/dashboard" className="text-sm text-muted-foreground transition hover:text-foreground">{t("dashboard")}</Link>
       </header>
       <main className="mx-auto max-w-5xl space-y-6 px-6 py-10">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Admin monitoring</h1>
-          <p className="mt-1 text-muted-foreground">Payments, script builds, and live Roblox script sessions.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t("adminTitle")}</h1>
+          <p className="mt-1 text-muted-foreground">{t("adminSub")}</p>
         </div>
         {error && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}
         {notice && <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{notice}</p>}
@@ -137,22 +139,22 @@ function AdminPage() {
           className="w-full rounded-xl border border-white/10 bg-transparent px-5 py-3.5 text-foreground outline-none transition focus:border-foreground"
         />
         <div className="grid gap-4 sm:grid-cols-4">
-          <Stat icon={Activity} label="Active sessions" value={monitoring?.activeSessions ?? "-"} />
-          <Stat icon={FileUp} label="Queued builds" value={monitoring?.queuedBuilds ?? "-"} />
-          <Stat icon={Shield} label="Scripts" value={monitoring?.scripts.length ?? "-"} />
-          <Stat icon={Receipt} label="Pending" value={payments.filter((p) => p.status === "PENDING").length} />
+          <Stat icon={Activity} label={t("activeSessions")} value={monitoring?.activeSessions ?? "-"} />
+          <Stat icon={FileUp} label={t("queuedBuilds")} value={monitoring?.queuedBuilds ?? "-"} />
+          <Stat icon={Shield} label={t("scriptsLabel")} value={monitoring?.scripts.length ?? "-"} />
+          <Stat icon={Receipt} label={t("pendingLabel")} value={payments.filter((p) => p.status === "PENDING").length} />
         </div>
-        <Card title="Payment approvals">
+        <Card title={t("approvalsTitle")}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-widest text-muted-foreground">
-                  <th className="pb-3 font-medium">User</th>
-                  <th className="pb-3 font-medium">Plan</th>
-                  <th className="pb-3 font-medium">Amount</th>
-                  <th className="pb-3 font-medium">Status</th>
-                  <th className="pb-3 font-medium">Proof</th>
-                  <th className="pb-3 font-medium">Action</th>
+                  <th className="pb-3 font-medium">{t("thUser")}</th>
+                  <th className="pb-3 font-medium">{t("thPlan")}</th>
+                  <th className="pb-3 font-medium">{t("thAmount")}</th>
+                  <th className="pb-3 font-medium">{t("thStatus")}</th>
+                  <th className="pb-3 font-medium">{t("thProof")}</th>
+                  <th className="pb-3 font-medium">{t("thAction")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -167,16 +169,16 @@ function AdminPage() {
                         <a href={`${apiUrl}/admin/payments/${payment.id}/proof`} target="_blank" rel="noreferrer" className="block w-20 overflow-hidden rounded border border-white/10 bg-black/20">
                           <img src={`${apiUrl}/admin/payments/${payment.id}/proof`} alt={`Payment proof for ${payment.id}`} className="h-14 w-20 object-cover" />
                         </a>
-                      ) : <span className="text-muted-foreground">No proof</span>}
+                      ) : <span className="text-muted-foreground">{t("noProof")}</span>}
                     </td>
                     <td className="py-3">
                       {payment.status === "PENDING" && (
                         <div className="flex gap-2">
                           <button disabled={processingId === payment.id} onClick={() => void approve(payment.id)} className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-4 py-2 text-xs font-semibold text-[#111] disabled:opacity-50">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> {processingId === payment.id ? "Working..." : "Approve"}
+                            <CheckCircle2 className="h-3.5 w-3.5" /> {processingId === payment.id ? t("working") : t("approve")}
                           </button>
                           <button disabled={processingId === payment.id} onClick={() => void reject(payment.id)} className="inline-flex items-center gap-2 rounded-full border border-red-400/40 px-4 py-2 text-xs font-semibold text-red-200 disabled:opacity-50">
-                            <XCircle className="h-3.5 w-3.5" /> Reject
+                            <XCircle className="h-3.5 w-3.5" /> {t("reject")}
                           </button>
                         </div>
                       )}
@@ -187,7 +189,7 @@ function AdminPage() {
             </table>
           </div>
         </Card>
-        <Card title="Recent script events">
+        <Card title={t("recentEventsTitle")}>
           <table className="w-full text-sm">
             <tbody className="divide-y divide-white/5">
               {(monitoring?.recentEvents ?? []).map((event) => (
@@ -202,11 +204,11 @@ function AdminPage() {
             </tbody>
           </table>
         </Card>
-        <Card title="Live script stats">
+        <Card title={t("liveStatsTitle")}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="text-left text-xs uppercase tracking-widest text-muted-foreground">
-                <th className="pb-3 font-medium">Script</th><th className="pb-3 font-medium">Roblox</th><th className="pb-3 font-medium">Money</th><th className="pb-3 font-medium">Earned</th><th className="pb-3 font-medium">/ hour</th><th className="pb-3 font-medium">Level</th><th className="pb-3 font-medium">Task</th><th className="pb-3 font-medium">Last seen</th>
+                <th className="pb-3 font-medium">{t("thScript")}</th><th className="pb-3 font-medium">{t("thRoblox")}</th><th className="pb-3 font-medium">{t("thMoney")}</th><th className="pb-3 font-medium">{t("thEarned")}</th><th className="pb-3 font-medium">{t("thPerHour")}</th><th className="pb-3 font-medium">{t("thLevel")}</th><th className="pb-3 font-medium">{t("thTask")}</th><th className="pb-3 font-medium">{t("thLastSeen")}</th>
               </tr></thead>
               <tbody className="divide-y divide-white/5">
                 {(monitoring?.sessions ?? []).map((session) => {

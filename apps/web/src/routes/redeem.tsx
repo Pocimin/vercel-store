@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, KeyRound, Loader2, UserPlus } from "lucide-react";
 import { Nav, Footer } from "./index";
-import { useI18n } from "@/lib/i18n";
-import { ApiError, api, authErrorMessage, json, me, turnstileSiteKey, type User } from "@/lib/api";
+import { useI18n, authErrorKey } from "@/lib/i18n";
+import { ApiError, api, json, me, turnstileSiteKey, type User } from "@/lib/api";
 import { Turnstile } from "@/components/Turnstile";
 
 export const Route = createFileRoute("/redeem")({
@@ -46,7 +46,7 @@ function RedeemPage() {
     event.preventDefault();
     const key = String(new FormData(event.currentTarget).get("licenseKey") ?? "").trim();
     if (key.length < 10) {
-      setError("Masukkan key lengkap dari email kamu · Enter the complete license key from your email.");
+      setError(t("redeemKeyTooShort"));
       return;
     }
     setError("");
@@ -74,11 +74,11 @@ function RedeemPage() {
     } catch (caught) {
       const code = caught instanceof ApiError ? caught.code : "";
       if (code === "LICENSE_CLAIMED") {
-        setError("Key ini sudah dipakai oleh akun lain. Hubungi support Discord untuk bantuan. · This key is already claimed by another account. Contact the support Discord for help.");
+        setError(t("redeemKeyClaimed"));
       } else if (code === "BAD_LICENSE") {
-        setError("Key tidak valid atau tidak aktif · Key is invalid or inactive.");
+        setError(t("redeemKeyInvalid"));
       } else {
-        setError(caught instanceof Error ? caught.message : "Verifikasi gagal · Verification failed");
+        setError(caught instanceof Error && caught.message ? caught.message : t("redeemVerifyFailed"));
       }
     } finally {
       setVerifying(false);
@@ -89,7 +89,7 @@ function RedeemPage() {
     event.preventDefault();
     if (busy) return;
     if (turnstileSiteKey && !captchaToken.current) {
-      setError("Selesaikan captcha dulu · Complete the captcha, then submit again.");
+      setError(t("errCaptchaSubmit"));
       return;
     }
     const form = new FormData(event.currentTarget);
@@ -113,7 +113,15 @@ function RedeemPage() {
       } catch {}
       navigate({ to: "/dashboard" });
     } catch (caught) {
-      setError(authErrorMessage(caught, "Could not claim this license"));
+      const code = caught instanceof ApiError ? caught.code : "";
+      const key = authErrorKey(code);
+      if (key) {
+        setError(t(key));
+      } else if (caught instanceof Error && caught.message) {
+        setError(caught.message);
+      } else {
+        setError(t("redeemClaimFailed"));
+      }
       if (turnstileSiteKey && sentToken) {
         // Tokens are single-use; force a fresh widget for the next attempt.
         captchaToken.current = "";
@@ -139,12 +147,12 @@ function RedeemPage() {
             <h1 className="text-center text-4xl font-extrabold text-foreground">{t("redeemTitle")}</h1>
             <p className="mt-3 text-center text-muted-foreground">{t("redeemSub")}</p>
             <form onSubmit={submitKey} className="mt-10 w-full" noValidate>
-              <label className="sr-only" htmlFor="redeem-key">License key</label>
+              <label className="sr-only" htmlFor="redeem-key">{t("licenseKey")}</label>
               <input id="redeem-key" name="licenseKey" autoComplete="off" spellCheck={false} placeholder="NZNT-XXXXXX-XXXXXX-XXXXXX" className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-center font-mono text-sm font-semibold tracking-wide text-foreground outline-none focus:border-foreground" />
               {error && <p className="mt-4 text-center text-sm text-rose-400">{error}</p>}
               <button type="submit" disabled={verifying} className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">
                 {verifying && <Loader2 className="h-4 w-4 animate-spin" />}
-                {verifying ? "Memeriksa… · Checking…" : t("activateLicense")}
+                {verifying ? t("checking") : t("activateLicense")}
               </button>
             </form>
 
@@ -154,7 +162,7 @@ function RedeemPage() {
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
                   <div>
                     <p className="text-sm font-bold text-emerald-200">
-                      Key valid! Sekarang daftar dengan key ini · Key valid! Now create your account with this key.
+                      {t("redeemKeyValid")}
                     </p>
                     <p className="mt-1 font-mono text-xs text-emerald-300/80">{verified}</p>
                     <button
@@ -163,8 +171,15 @@ function RedeemPage() {
                       className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-6 py-2.5 text-sm font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
                     >
                       <UserPlus className="h-4 w-4" />
-                      Daftar sekarang · Register now →
+                      {t("redeemRegisterNow")} →
                     </button>
+                    <Link
+                      to="/register"
+                      search={{ key: keyRef.current }}
+                      className="mt-3 block text-xs text-muted-foreground transition hover:text-foreground"
+                    >
+                      {t("createAccount")} →
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -176,17 +191,17 @@ function RedeemPage() {
             <h1 className="text-center text-4xl font-extrabold text-foreground">{t("createAccount")}</h1>
             <p className="mt-3 text-center text-muted-foreground">{t("createAccountSub")}</p>
             <form onSubmit={submitAccount} className="mt-10 w-full space-y-4" noValidate>
-              <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-email">Email<input id="redeem-email" name="email" type="email" autoComplete="off" spellCheck={false} required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
+              <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-email">{t("authEmailLabel")}<input id="redeem-email" name="email" type="email" autoComplete="off" spellCheck={false} required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
               <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-username">{t("username")}<input id="redeem-username" name="username" autoComplete="off" spellCheck={false} required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
               <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-password">{t("password")}<input id="redeem-password" name="password" type="password" autoComplete="off" required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
               {turnstileSiteKey && <Turnstile key={captchaEpoch} onToken={(token) => { captchaToken.current = token; }} />}
               {error && <p className="text-center text-sm text-rose-400">{error}</p>}
-              <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "Please wait..." : t("createContinue")}</button>
+              <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? t("authBusy") : t("createContinue")}</button>
             </form>
           </>
         )}
         <Link to="/purchase" className="mt-8 text-sm text-muted-foreground transition hover:text-foreground">
-          Beli key baru · Buy a new license →
+          {t("redeemBuyNew")} →
         </Link>
       </main>
       <Footer />

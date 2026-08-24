@@ -16,7 +16,7 @@ import { verifyTurnstile } from "../lib/turnstile.js";
 
 const purchaseSchema = z.object({
   plan: z.string().trim().min(1).max(64),
-  method: z.string().trim().min(1).max(32),
+  method: z.enum(["qris", "robux", "paypal"]),
   turnstileToken: z.string().optional(),
   email: z.string().email().optional(),
   proofFileName: z.string().min(1).max(160).optional(),
@@ -236,8 +236,16 @@ export async function registerPurchaseRoutes(app: FastifyInstance) {
     const input = purchaseSchema.parse(request.body);
     const guestEmail = input.email?.trim().toLowerCase() ?? null;
 
-    if (!user && !guestEmail) {
-      return reply.status(401).send({ ok: false, error: { code: "UNAUTHORIZED", message: "Sign in or provide an email for guest checkout" } });
+    // QRIS is fully automated guest checkout — no account needed, email required for key delivery.
+    // Manual methods (Robux / PayPal) require a signed-in account — the register step appears there.
+    if (input.method === "qris") {
+      if (!user && !guestEmail) {
+        return reply.status(400).send({ ok: false, error: { code: "EMAIL_REQUIRED", message: "Enter your email for the license key" } });
+      }
+    } else {
+      if (!user) {
+        return reply.status(401).send({ ok: false, error: { code: "UNAUTHORIZED", message: "Sign in before submitting payment proof" } });
+      }
     }
 
     if (!(await verifyTurnstile(input.turnstileToken, request.ip))) {

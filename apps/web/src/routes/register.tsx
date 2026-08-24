@@ -45,8 +45,11 @@ function RegisterPage() {
     <div className="min-h-screen bg-background">
       <Nav />
       <main className="mx-auto max-w-xl px-6 py-16">
-        <p className="mb-6 text-center text-sm text-muted-foreground">
-          {t("createAccount")} · {t("createAccountSub")}
+        <h1 className="text-center text-3xl font-extrabold tracking-tight text-foreground">
+          {t("createAccount")}
+        </h1>
+        <p className="mb-6 mt-2 text-center text-sm text-muted-foreground">
+          {t("createAccountSub")}
         </p>
         <AuthPanel initialMode="register" initialLicenseKey={prefillKey || undefined} onDone={doneRegister} />
       </main>

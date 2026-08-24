@@ -82,7 +82,7 @@ function Sidebar({ tab, setTab, signOut, signingOut }: { tab: Tab; setTab: (t: T
       <div className="mt-8 border-t border-white/5 pt-4">
         <button onClick={signOut} disabled={signingOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/[0.03] hover:text-foreground disabled:opacity-50">
           <LogOut className="h-4 w-4" />
-          {signingOut ? "Signing out..." : t("signOut")}
+          {signingOut ? t("signingOut") : t("signOut")}
         </button>
       </div>
     </aside>
@@ -137,18 +137,18 @@ function Overview() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Stat icon={Shield} label={t("licenseStatus")} value={license?.status ?? t("inactive")} sub={license?.plan ?? "No active plan"} />
+        <Stat icon={Shield} label={t("licenseStatus")} value={license?.status ?? t("inactive")} sub={license?.plan ?? t("noActivePlan")} />
         <Stat icon={Clock} label={t("expiresIn")} value={formatDate(license?.expiresAt)} sub={license?.keyPreview ?? "-"} />
-        <Stat icon={Cpu} label="Roblox" value={session?.robloxUsername ?? data?.user.robloxUsername ?? "-"} sub={session?.executor ?? "No session yet"} />
+        <Stat icon={Cpu} label="Roblox" value={session?.robloxUsername ?? data?.user.robloxUsername ?? "-"} sub={session?.executor ?? t("noSessionYet")} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card
           title={t("latestBuild")}
-          action={<span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-400">Live</span>}
+          action={<span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-400">{t("liveBadge")}</span>}
         >
           <p className="text-sm text-muted-foreground">
-            Use the universal loader below. Your key and active sessions stay attached to this account.
+            {t("dashLoaderDesc")}
           </p>
           <Link to="/dashboard" search={{}} hash="" className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-5 py-2.5 text-sm font-semibold text-[#111] transition-transform hover:-translate-y-0.5">
             <Download className="h-4 w-4" />
@@ -160,11 +160,11 @@ function Overview() {
           <ul className="space-y-3 text-sm">
             {(data?.sessions.length ? data.sessions.slice(0, 3) : []).map((event) => (
               <li key={event.id} className="flex items-center justify-between border-b border-white/5 pb-3 last:border-0 last:pb-0">
-                <span className="text-foreground">{event.scriptFile ?? event.game ?? "Script session"}</span>
+                <span className="text-foreground">{event.scriptFile ?? event.game ?? t("scriptSession")}</span>
                 <span className="text-muted-foreground">{formatDateTime(event.lastSeenAt)}</span>
               </li>
             ))}
-            {!data?.sessions.length && <li className="text-muted-foreground">No script sessions yet.</li>}
+            {!data?.sessions.length && <li className="text-muted-foreground">{t("noSessionsYet")}</li>}
           </ul>
         </Card>
       </div>
@@ -179,7 +179,7 @@ function LicenseTab() {
   const [checked, setChecked] = useState<null | "active" | "inactive">(null);
   const [checkError, setCheckError] = useState("");
   const license = data?.licenses[0];
-  const key = license?.key ?? license?.keyPreview ?? "No license yet";
+  const key = license?.key ?? license?.keyPreview ?? t("noLicenseYet");
   const copy = () => {
     navigator.clipboard.writeText(key);
     setCopied(true);
@@ -192,14 +192,14 @@ function LicenseTab() {
       setChecked(result.status === "ACTIVE" ? "active" : "inactive");
     } catch (error) {
       setChecked("inactive");
-      setCheckError(error instanceof Error ? error.message : "Vonalia validation failed");
+      setCheckError(error instanceof Error && error.message ? error.message : t("licValidationFailed"));
     }
   };
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t("navLicense")}</h1>
-        <p className="mt-1 text-muted-foreground">Your license key and current plan.</p>
+        <p className="mt-1 text-muted-foreground">{t("dashLicenseSub")}</p>
       </div>
 
       <Card title={t("licenseKey")}>
@@ -207,7 +207,7 @@ function LicenseTab() {
           <span className="truncate tracking-widest">{key}</span>
           <button onClick={copy} disabled={!license} className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1 text-xs text-muted-foreground transition hover:text-foreground disabled:opacity-40">
             {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-            {copied ? "Copied" : "Copy"}
+            {copied ? t("copied") : t("copy")}
           </button>
         </div>
       </Card>
@@ -296,9 +296,9 @@ function Monitoring() {
     try {
       const result = await json<{ code: string }>(await api("/user/monitoring-code", { method: "POST" }));
       setIssuedCode(result.code);
-      setCodeStatus("Copy this code into the Monitoring tab in your script. It stays the same until you explicitly replace it.");
+      setCodeStatus(t("monCodeStatus"));
     } catch (error) {
-      setCodeStatus(error instanceof Error ? error.message : "Could not create monitoring code");
+      setCodeStatus(error instanceof Error && error.message ? error.message : t("monCodeFailed"));
     }
   }
 
@@ -316,32 +316,32 @@ function Monitoring() {
         <p className="mt-1 text-muted-foreground">{t("monitoringSub")}</p>
       </div>
 
-      <Card title="Monitoring access">
-        <p className="text-sm text-muted-foreground">Use this code only in a script's Monitoring tab. It links stats to this account and cannot load scripts or access your license.</p>
+      <Card title={t("monitoringAccess")}>
+        <p className="text-sm text-muted-foreground">{t("monCodeDesc")}</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <code className="min-w-0 flex-1 truncate rounded-lg border border-dashed border-white/10 bg-black/30 px-4 py-3 text-sm text-foreground">
-            {monitoringCode || "No monitoring code generated"}
+            {monitoringCode || t("monNoCode")}
           </code>
-          {!monitoringCode && <button onClick={issueCode} className="rounded-full bg-[#f3efe7] px-4 py-2 text-sm font-semibold text-[#111]">Generate code</button>}
+          {!monitoringCode && <button onClick={issueCode} className="rounded-full bg-[#f3efe7] px-4 py-2 text-sm font-semibold text-[#111]">{t("monGenerate")}</button>}
           {monitoringCode && <button onClick={copyCode} className={`inline-flex min-w-24 items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition duration-200 ${codeCopied ? "scale-95 border-emerald-400/40 bg-emerald-500/15 text-emerald-400" : "border-white/10 text-foreground"}`}>
             {codeCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {codeCopied ? "Copied" : "Copy"}
+            {codeCopied ? t("copied") : t("copy")}
           </button>}
         </div>
         {codeStatus && <p className="mt-3 text-xs text-muted-foreground">{codeStatus}</p>}
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {(data?.sessions ?? []).map((session) => {
+          {(data?.sessions ?? []).map((session) => {
           const stats = statRecord(session.stats);
-          return <Card key={session.id} title={session.robloxUsername ?? session.scriptFile ?? "Script instance"}>
+          return <Card key={session.id} title={session.robloxUsername ?? session.scriptFile ?? t("scriptInstance")}>
             <dl className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">Status</dt><dd className="max-w-52 text-right text-foreground">{statText(session.currentTask) !== "-" ? statText(session.currentTask) : session.status}</dd></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">Elapsed</dt><dd className="text-right tabular-nums text-foreground">{durationText(statValue(stats, ["elapsed"]))}</dd></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">Current money</dt><dd className="text-right text-foreground">{moneyText(statValue(stats, ["currentMoney", "money", "cash", "beli"]))}</dd></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">Earned</dt><dd className="text-right text-foreground">{moneyText(statValue(stats, ["totalEarned", "earned", "sessionEarned"]))}</dd></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">Money / hour</dt><dd className="text-right text-foreground">{moneyText(statValue(stats, ["moneyPerHour", "moneyHour"]))}</dd></div>
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">Last seen</dt><dd className="text-right text-foreground">{formatDateTime(session.lastSeenAt)}</dd></div>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">{t("statusLabel")}</dt><dd className="max-w-52 text-right text-foreground">{statText(session.currentTask) !== "-" ? statText(session.currentTask) : session.status}</dd></div>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">{t("elapsed")}</dt><dd className="text-right tabular-nums text-foreground">{durationText(statValue(stats, ["elapsed"]))}</dd></div>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">{t("currentMoney")}</dt><dd className="text-right text-foreground">{moneyText(statValue(stats, ["currentMoney", "money", "cash", "beli"]))}</dd></div>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">{t("earnedLabel")}</dt><dd className="text-right text-foreground">{moneyText(statValue(stats, ["totalEarned", "earned", "sessionEarned"]))}</dd></div>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">{t("moneyPerHour")}</dt><dd className="text-right text-foreground">{moneyText(statValue(stats, ["moneyPerHour", "moneyHour"]))}</dd></div>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3"><dt className="text-muted-foreground">{t("lastSeen")}</dt><dd className="text-right text-foreground">{formatDateTime(session.lastSeenAt)}</dd></div>
             </dl>
           </Card>;
         })}
@@ -357,17 +357,17 @@ function Billing() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t("navBilling")}</h1>
-        <p className="mt-1 text-muted-foreground">Your orders and invoices.</p>
+        <p className="mt-1 text-muted-foreground">{t("billingIntro")}</p>
       </div>
-      <Card title="Order history">
+      <Card title={t("orderHistory")}>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-widest text-muted-foreground">
-              <th className="pb-3 font-medium">Order</th>
-              <th className="pb-3 font-medium">Date</th>
-              <th className="pb-3 font-medium">Item</th>
-              <th className="pb-3 font-medium">Total</th>
-              <th className="pb-3 font-medium">Status</th>
+              <th className="pb-3 font-medium">{t("order")}</th>
+              <th className="pb-3 font-medium">{t("date")}</th>
+              <th className="pb-3 font-medium">{t("item")}</th>
+              <th className="pb-3 font-medium">{t("total")}</th>
+              <th className="pb-3 font-medium">{t("status")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -397,10 +397,10 @@ function Support() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t("navSupport")}</h1>
-        <p className="mt-1 text-muted-foreground">Trouble getting set up? We usually reply within a few hours.</p>
+        <p className="mt-1 text-muted-foreground">{t("supportIntro")}</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card title="Discord">
+        <Card title={t("discordTitle")}>
           <p className="text-sm text-muted-foreground">{t("discordDesc")}</p>
           <a href="https://discord.gg/nznt" target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-5 py-2.5 text-sm font-semibold text-[#111]">
             {t("openDiscord")}
@@ -420,6 +420,7 @@ function Support() {
 }
 
 function Dashboard() {
+  const { t } = useI18n();
   const [tab, setTab] = useState<Tab>("overview");
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
@@ -433,7 +434,7 @@ function Dashboard() {
       setData(await dashboard());
       setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login required");
+      setError(err instanceof Error && err.message ? err.message : t("loginRequired"));
     }
   }
 
@@ -470,7 +471,7 @@ function Dashboard() {
     );
   }
 
-  const displayName = data.user.displayName ?? data.user.username ?? data.user.email ?? "customer";
+  const displayName = data.user.displayName ?? data.user.username ?? data.user.email ?? t("customer");
 
   return (
     <DashboardContext.Provider value={data}>
@@ -483,11 +484,11 @@ function Dashboard() {
               <span className="text-sm font-extrabold text-foreground">nznt's hub</span>
             </div>
             <div className="hidden text-sm text-muted-foreground md:block">
-              Signed in as <span className="text-foreground">{displayName}</span>
+              {t("signedInAs")}{" "}<span className="text-foreground">{displayName}</span>
             </div>
             <div className="flex items-center gap-3">
               <Link to="/redeem" className="hidden text-sm text-muted-foreground transition hover:text-foreground sm:block">
-                Redeem
+                {t("redeem")}
               </Link>
               <div className="relative">
                 <button
@@ -501,16 +502,16 @@ function Dashboard() {
                 </button>
                 {menuOpen && (
                   <>
-                    <button type="button" className="fixed inset-0 z-10 cursor-default" aria-label="Close menu" onClick={() => setMenuOpen(false)} />
+                    <button type="button" className="fixed inset-0 z-10 cursor-default" aria-label={t("closeMenu")} onClick={() => setMenuOpen(false)} />
                     <div role="menu" className="absolute right-0 z-20 mt-2 w-44 rounded-xl border border-white/10 bg-[#141414] p-1.5 shadow-xl">
                       <Link to="/redeem" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-foreground transition hover:bg-white/[0.06]">
-                        Redeem
+                        {t("redeem")}
                       </Link>
                       <Link to="/terms" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/[0.06] hover:text-foreground">
-                        Terms
+                        {t("terms")}
                       </Link>
                       <Link to="/privacy" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition hover:bg-white/[0.06] hover:text-foreground">
-                        Privacy
+                        {t("privacy")}
                       </Link>
                     </div>
                   </>

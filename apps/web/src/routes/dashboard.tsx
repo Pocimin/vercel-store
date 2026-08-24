@@ -89,9 +89,9 @@ function Sidebar({ tab, setTab, signOut, signingOut }: { tab: Tab; setTab: (t: T
   );
 }
 
-function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+function Card({ title, children, action, delay = 0 }: { title: string; children: React.ReactNode; action?: React.ReactNode; delay?: number }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-[#141414] p-5">
+    <div className="anim-fade-up anim-visible rounded-xl border border-white/5 bg-[#141414] p-5" style={delay ? { animationDelay: `${delay}ms` } : undefined}>
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">{title}</h3>
         {action}
@@ -106,19 +106,21 @@ function Stat({
   label,
   value,
   sub,
+  delay = 0,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   sub?: string;
+  delay?: number;
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-[#141414] p-5">
+    <div className="anim-fade-up anim-visible rounded-xl border border-white/5 bg-[#141414] p-5" style={delay ? { animationDelay: `${delay}ms` } : undefined}>
       <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04]">
         <Icon className="h-4 w-4 text-foreground" />
       </div>
       <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-extrabold text-foreground">{value}</div>
+      <div className="anim-pulse mt-1 text-2xl font-extrabold text-foreground">{value}</div>
       {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
     </div>
   );
@@ -137,15 +139,16 @@ function Overview() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Stat icon={Shield} label={t("licenseStatus")} value={license?.status ?? t("inactive")} sub={license?.plan ?? t("noActivePlan")} />
-        <Stat icon={Clock} label={t("expiresIn")} value={formatDate(license?.expiresAt)} sub={license?.keyPreview ?? "-"} />
-        <Stat icon={Cpu} label="Roblox" value={session?.robloxUsername ?? data?.user.robloxUsername ?? "-"} sub={session?.executor ?? t("noSessionYet")} />
+        <Stat icon={Shield} label={t("licenseStatus")} value={license?.status ?? t("inactive")} sub={license?.plan ?? t("noActivePlan")} delay={0} />
+        <Stat icon={Clock} label={t("expiresIn")} value={formatDate(license?.expiresAt)} sub={license?.keyPreview ?? "-"} delay={60} />
+        <Stat icon={Cpu} label="Roblox" value={session?.robloxUsername ?? data?.user.robloxUsername ?? "-"} sub={session?.executor ?? t("noSessionYet")} delay={120} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card
           title={t("latestBuild")}
-          action={<span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-400">{t("liveBadge")}</span>}
+          delay={0}
+          action={<span className="anim-pulse rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-bold text-emerald-400">{t("liveBadge")}</span>}
         >
           <p className="text-sm text-muted-foreground">
             {t("dashLoaderDesc")}
@@ -156,7 +159,7 @@ function Overview() {
           </Link>
         </Card>
 
-        <Card title={t("recentActivity")}>
+        <Card title={t("recentActivity")} delay={60}>
           <ul className="space-y-3 text-sm">
             {(data?.sessions.length ? data.sessions.slice(0, 3) : []).map((event) => (
               <li key={event.id} className="flex items-center justify-between border-b border-white/5 pb-3 last:border-0 last:pb-0">
@@ -372,7 +375,7 @@ function Billing() {
           </thead>
           <tbody className="divide-y divide-white/5">
             {(data?.payments ?? []).map((o) => (
-              <tr key={o.id} className="text-foreground">
+              <tr key={o.id} className="anim-row-hover text-foreground">
                 <td className="py-3 font-mono text-xs">{o.id.slice(0, 8)}</td>
                 <td className="py-3 text-muted-foreground">{formatDate(o.createdAt)}</td>
                 <td className="py-3">{o.plan}</td>
@@ -503,7 +506,7 @@ function Dashboard() {
                 {menuOpen && (
                   <>
                     <button type="button" className="fixed inset-0 z-10 cursor-default" aria-label={t("closeMenu")} onClick={() => setMenuOpen(false)} />
-                    <div role="menu" className="absolute right-0 z-20 mt-2 w-44 rounded-xl border border-white/10 bg-[#141414] p-1.5 shadow-xl">
+                    <div role="menu" className="anim-scale-in anim-visible absolute right-0 z-20 mt-2 w-44 rounded-xl border border-white/10 bg-[#141414] p-1.5 shadow-xl">
                       <Link to="/redeem" onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm text-foreground transition hover:bg-white/[0.06]">
                         {t("redeem")}
                       </Link>
@@ -529,12 +532,14 @@ function Dashboard() {
           </nav>
 
           <main className="mx-auto max-w-5xl px-6 py-10">
-            {tab === "overview" && <Overview />}
-            {tab === "downloads" && <Downloads />}
-            {tab === "license" && <LicenseTab />}
-            {tab === "monitoring" && <Monitoring />}
-            {tab === "billing" && <Billing />}
-            {tab === "support" && <Support />}
+            <div key={tab} className="anim-fade-in anim-visible">
+              {tab === "overview" && <Overview />}
+              {tab === "downloads" && <Downloads />}
+              {tab === "license" && <LicenseTab />}
+              {tab === "monitoring" && <Monitoring />}
+              {tab === "billing" && <Billing />}
+              {tab === "support" && <Support />}
+            </div>
           </main>
         </div>
       </div>

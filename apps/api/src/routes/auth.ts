@@ -14,7 +14,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3).max(32),
   password: z.string().min(8),
-  licenseKey: z.string().min(8).max(128),
+  licenseKey: z.string().min(8).max(128).optional(),
   robloxUsername: z.string().min(1).max(64).optional(),
   turnstileToken: z.string().optional()
 });
@@ -126,7 +126,7 @@ async function resolveLicenseForClaim(rawKey: string): Promise<ClaimResolution |
 
 async function createUserWithLicense(
   input: { email: string; username: string; password: string; robloxUsername?: string | undefined },
-  resolution: Exclude<ClaimResolution, string>
+  resolution: Exclude<ClaimResolution, string> | null
 ) {
   return db.$transaction(async (tx) => {
     const created = await tx.user.create({
@@ -139,13 +139,13 @@ async function createUserWithLicense(
       }
     });
 
-    if (resolution.kind === "local") {
+    if (resolution?.kind === "local") {
       const claimed = await tx.license.updateMany({
         where: { id: resolution.licenseId, userId: null },
         data: { userId: created.id }
       });
       if (claimed.count === 0) throw new LicenseClaimError();
-    } else {
+    } else if (resolution?.kind === "provider") {
       await tx.license.create({
         data: {
           userId: created.id,
@@ -183,12 +183,15 @@ export async function registerAuthRoutes(app: FastifyInstance) {
       return reply.status(409).send({ ok: false, error: { code: "ACCOUNT_EXISTS", message: "An account with that email or username already exists." } });
     }
 
-    const resolution = await resolveLicenseForClaim(input.licenseKey);
-    if (resolution === "claimed") {
-      return reply.status(409).send({ ok: false, error: { code: "LICENSE_CLAIMED", message: "This license already belongs to an account. Sign in with the purchase account." } });
-    }
-    if (resolution === "invalid") {
-      return reply.status(403).send({ ok: false, error: { code: "BAD_LICENSE", message: "License key is invalid, expired, or inactive" } });
+    let resolution: ClaimResolution | "invalid" | "claimed" | null = null;
+    if (input.licenseKey) {
+      resolution = await resolveLicenseForClaim(input.licenseKey);
+      if (resolution === "claimed") {
+        return reply.status(409).send({ ok: false, error: { code: "LICENSE_CLAIMED", message: "This license already belongs to an account. Sign in with the purchase account." } });
+      }
+      if (resolution === "invalid") {
+        return reply.status(403).send({ ok: false, error: { code: "BAD_LICENSE", message: "License key is invalid, expired, or inactive" } });
+      }
     }
 
     let user;

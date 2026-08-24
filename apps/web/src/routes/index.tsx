@@ -5,6 +5,7 @@ import ui1Image from "@/assets/ui1.png";
 import ui2Image from "@/assets/ui2.png";
 import { ScriptBox } from "@/components/ScriptBox";
 import { useI18n } from "@/lib/i18n";
+import { useInView } from "@/lib/useInView";
 import { GAMES } from "@/lib/games";
 
 export const Route = createFileRoute("/")({
@@ -46,7 +47,7 @@ function useSaleCountdown() {
 export function Nav() {
   const { t } = useI18n();
   return (
-    <header className="sticky top-0 z-50 px-4 pt-5">
+    <header className="anim-fade-down anim-visible sticky top-0 z-50 px-4 pt-5">
       <nav className="mx-auto flex max-w-3xl items-center justify-between rounded-full border border-white/5 bg-[#1c1c1c] px-6 py-3">
         <Link to="/" className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-foreground">
           <img src="/nznt-logo.png" alt="" className="h-7 w-7 rounded-md object-cover" />
@@ -90,17 +91,17 @@ function Hero() {
   const { days, hours, minutes, seconds } = useSaleCountdown();
   return (
     <section className="px-4 pt-14 pb-8 text-center sm:pt-16">
-      <h1 className="brand-gradient text-[22vw] font-extrabold leading-none tracking-tight sm:text-[180px]">
+      <h1 className="anim-fade-up anim-visible anim-delay-1 brand-gradient text-[22vw] font-extrabold leading-none tracking-tight sm:text-[180px]">
         nznt's hub
       </h1>
-      <p className="mt-6 text-base text-muted-foreground sm:text-lg">
+      <p className="anim-fade-up anim-visible anim-delay-2 mt-6 text-base text-muted-foreground sm:text-lg">
         {t("tagline")}
       </p>
 
-      <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+      <div className="anim-fade-up anim-visible anim-delay-3 mt-10 flex flex-wrap items-center justify-center gap-3">
         <Link
           to="/free"
-          className="group inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_10px_30px_-12px_rgba(0,0,0,0.6)] transition-transform hover:-translate-y-0.5"
+          className="anim-shimmer group inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_10px_30px_-12px_rgba(0,0,0,0.6)] transition-transform hover:-translate-y-0.5"
         >
           {t("getStarted")}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -108,17 +109,17 @@ function Hero() {
 
         <Link
           to="/purchase"
-          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-7 py-3.5 text-base font-semibold text-foreground transition hover:bg-white/[0.08]"
+          className="anim-shimmer inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.03] px-7 py-3.5 text-base font-semibold text-foreground transition hover:bg-white/[0.08]"
         >
           {t("buyPremium")}
         </Link>
       </div>
 
-      <div className="mt-10 flex flex-col items-center gap-3">
+      <div className="anim-fade-up anim-visible anim-delay-4 mt-10 flex flex-col items-center gap-3">
         <p className="text-sm text-muted-foreground">
           <span className="brand-gradient font-bold">25%</span> {t("saleEndsIn")}
         </p>
-        <div className="flex items-center gap-5">
+        <div className="anim-pulse flex items-center gap-5">
           <TimeCell value={days} label={t("days")} />
           <span className="text-muted-foreground/60">:</span>
           <TimeCell value={hours} label={t("hrs")} />
@@ -157,7 +158,7 @@ function GamesShowcase() {
     >
       <div className="pointer-events-none absolute -inset-6 -z-10 bg-[radial-gradient(60%_60%_at_30%_20%,rgba(255,140,60,0.10),transparent_70%)]" />
 
-      <div className="overflow-hidden rounded-[22px] border border-white/10 bg-[#111] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.9)]">
+      <div className="overflow-hidden rounded-[22px] border border-white/10 bg-[#111] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.9)] anim-card-hover anim-tilt">
 
         <div className="grid gap-0 sm:grid-cols-[210px_1fr]">
           <ul className="border-b border-white/5 bg-[#0c0c0c] p-2 sm:border-b-0 sm:border-r">
@@ -167,7 +168,7 @@ function GamesShowcase() {
                 <li key={g.id}>
                   <button
                     onClick={() => setActive(g.id)}
-                    className={`group flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition ${
+                    className={`anim-card-hover-sm group flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition ${
                       on
                         ? "bg-white/[0.05] text-foreground"
                         : "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground"
@@ -274,8 +275,9 @@ function StackedUI() {
 
 function FreeSection() {
   const { t } = useI18n();
+  const { ref, inView } = useInView<HTMLElement>();
   return (
-    <section id="free" className="scroll-mt-24 px-4 py-24">
+    <section id="free" ref={ref} className={`scroll-mt-24 px-4 py-24 anim-fade-up ${inView ? "anim-visible" : ""}`}>
       <div className="mx-auto grid max-w-6xl items-start gap-16 md:grid-cols-2">
         <div>
           <ScriptBox script={LOADER_SCRIPT_HOME} />
@@ -301,7 +303,7 @@ function FreeSection() {
           <div className="mt-6">
             <Link
               to="/purchase"
-              className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-6 py-3 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+              className="anim-shimmer inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-6 py-3 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
             >
               {t("buyPremium")} <ArrowRight className="h-4 w-4" />
             </Link>
@@ -326,10 +328,11 @@ function FeatureRow({
   right: React.ReactNode;
   reverse?: boolean;
 }) {
+  const { ref, inView } = useInView<HTMLElement>();
   return (
-    <section className="px-4 py-20">
+    <section ref={ref} className="px-4 py-20">
       <div
-        className={`mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2 ${
+        className={`anim-fade-up ${inView ? "anim-visible" : ""} mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2 ${
           reverse ? "md:[&>div:first-child]:order-2" : ""
         }`}
       >

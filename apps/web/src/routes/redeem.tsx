@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CheckCircle2, KeyRound, Loader2, UserPlus } from "lucide-react";
+import { CheckCircle2, Loader2, UserPlus } from "lucide-react";
 import { Nav, Footer } from "./index";
 import { useI18n, authErrorKey } from "@/lib/i18n";
 import { ApiError, api, json, me, turnstileSiteKey, type User } from "@/lib/api";
@@ -20,6 +20,28 @@ type Mode = "unverified" | "loggedin";
 type Step = "key" | "account";
 
 const REDEEM_PREFILL_KEY = "nznt_prefill_key";
+
+function KeyIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" fill="none" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="nz-key-gold" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#ffe296" />
+          <stop offset="0.48" stopColor="#f2a33c" />
+          <stop offset="1" stopColor="#e2692f" />
+        </linearGradient>
+      </defs>
+      <g stroke="url(#nz-key-gold)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <circle cx="15" cy="15" r="8.2" />
+        <circle cx="15" cy="15" r="2.7" fill="url(#nz-key-gold)" stroke="none" />
+        <path d="M21.2 21.2 L36.5 36.5" strokeWidth="2.9" />
+        <path d="M32.2 32.2 L27.5 36.9" strokeWidth="2.4" />
+        <path d="M36.4 36.4 L33 39.8" strokeWidth="2.4" />
+      </g>
+      <path d="M39 8.5 l2.1 3 3 2.1 -3 2.1 -2.1 3 -2.1 -3 -3 -2.1 3 -2.1 z" fill="url(#nz-key-gold)" opacity="0.95" />
+    </svg>
+  );
+}
 
 function RedeemPage() {
   const { t } = useI18n();
@@ -143,23 +165,27 @@ function RedeemPage() {
       <main className="mx-auto flex max-w-xl flex-col items-center px-6 py-24">
         {step === "key" ? (
           <>
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-[oklch(0.74_0.19_47/0.3)] bg-[oklch(0.74_0.19_47/0.12)] shadow-[0_0_28px_-6px_oklch(0.74_0.19_47/0.5)]"><KeyRound className="h-6 w-6 text-[oklch(0.82_0.15_55)]" /></div>
-            <h1 className="text-center text-4xl font-extrabold text-foreground">{t("redeemTitle")}</h1>
-            <p className="mt-3 text-center text-muted-foreground">{t("redeemSub")}</p>
-            <form onSubmit={submitKey} className="mt-10 w-full" noValidate>
+            <div className="anim-pop anim-visible mb-6">
+              <div className="key-badge anim-float flex h-16 w-16 items-center justify-center">
+                <KeyIcon className="key-glow h-9 w-9" />
+              </div>
+            </div>
+            <h1 className="anim-fade-up anim-visible anim-delay-1 text-center text-4xl font-extrabold text-foreground">{t("redeemTitle")}</h1>
+            <p className="anim-fade-up anim-visible anim-delay-2 mt-3 text-center text-muted-foreground">{t("redeemSub")}</p>
+            <form onSubmit={submitKey} className="anim-fade-up anim-visible anim-delay-3 mt-10 w-full" noValidate>
               <label className="sr-only" htmlFor="redeem-key">{t("licenseKey")}</label>
               <input id="redeem-key" name="licenseKey" autoComplete="off" spellCheck={false} placeholder="NZNT-XXXXXX-XXXXXX-XXXXXX" className="w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-center font-mono text-sm font-semibold tracking-wide text-foreground outline-none focus:border-foreground" />
-              {error && <p className="mt-4 text-center text-sm text-rose-400">{error}</p>}
-              <button type="submit" disabled={verifying} className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">
+              {error && <p key={error} className="anim-shake mt-4 text-center text-sm text-rose-400">{error}</p>}
+              <button type="submit" disabled={verifying} className="anim-shimmer mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">
                 {verifying && <Loader2 className="h-4 w-4 animate-spin" />}
                 {verifying ? t("checking") : t("activateLicense")}
               </button>
             </form>
 
             {verified && !error && (
-              <div className="mt-8 w-full rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-5">
+              <div className="anim-pop anim-visible mt-8 w-full rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-5">
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+                  <CheckCircle2 className="anim-wobble mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
                   <div>
                     <p className="text-sm font-bold text-emerald-200">
                       {t("redeemKeyValid")}
@@ -168,7 +194,7 @@ function RedeemPage() {
                     <button
                       type="button"
                       onClick={registerNow}
-                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-6 py-2.5 text-sm font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+                      className="anim-shimmer mt-4 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-6 py-2.5 text-sm font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
                     >
                       <UserPlus className="h-4 w-4" />
                       {t("redeemRegisterNow")} →
@@ -187,20 +213,24 @@ function RedeemPage() {
           </>
         ) : (
           <>
-            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-[oklch(0.74_0.19_47/0.3)] bg-[oklch(0.74_0.19_47/0.12)] shadow-[0_0_28px_-6px_oklch(0.74_0.19_47/0.5)]"><UserPlus className="h-6 w-6 text-[oklch(0.82_0.15_55)]" /></div>
-            <h1 className="text-center text-4xl font-extrabold text-foreground">{t("createAccount")}</h1>
-            <p className="mt-3 text-center text-muted-foreground">{t("createAccountSub")}</p>
-            <form onSubmit={submitAccount} className="mt-10 w-full space-y-4" noValidate>
+            <div className="anim-pop anim-visible mb-6">
+              <div className="key-badge anim-float flex h-16 w-16 items-center justify-center">
+                <UserPlus className="key-glow h-7 w-7 text-[oklch(0.82_0.15_55)]" />
+              </div>
+            </div>
+            <h1 className="anim-fade-up anim-visible anim-delay-1 text-center text-4xl font-extrabold text-foreground">{t("createAccount")}</h1>
+            <p className="anim-fade-up anim-visible anim-delay-2 mt-3 text-center text-muted-foreground">{t("createAccountSub")}</p>
+            <form onSubmit={submitAccount} className="anim-fade-up anim-visible anim-delay-3 mt-10 w-full space-y-4" noValidate>
               <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-email">{t("authEmailLabel")}<input id="redeem-email" name="email" type="email" autoComplete="off" spellCheck={false} required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
               <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-username">{t("username")}<input id="redeem-username" name="username" autoComplete="off" spellCheck={false} required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
               <label className="block text-xs uppercase tracking-widest text-muted-foreground" htmlFor="redeem-password">{t("password")}<input id="redeem-password" name="password" type="password" autoComplete="off" required className="mt-2 w-full rounded-lg border border-white/10 bg-[#101010] px-4 py-3 text-foreground outline-none focus:border-foreground" /></label>
               {turnstileSiteKey && <Turnstile key={captchaEpoch} onToken={(token) => { captchaToken.current = token; }} />}
-              {error && <p className="text-center text-sm text-rose-400">{error}</p>}
-              <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? t("authBusy") : t("createContinue")}</button>
+              {error && <p key={error} className="anim-shake text-center text-sm text-rose-400">{error}</p>}
+              <button type="submit" disabled={busy} className="anim-shimmer inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] disabled:opacity-70">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? t("authBusy") : t("createContinue")}</button>
             </form>
           </>
         )}
-        <Link to="/purchase" className="mt-8 text-sm text-muted-foreground transition hover:text-foreground">
+        <Link to="/purchase" className="anim-fade-up anim-visible anim-delay-4 mt-8 text-sm text-muted-foreground transition hover:text-foreground">
           {t("redeemBuyNew")} →
         </Link>
       </main>

@@ -17,21 +17,21 @@ export const Route = createFileRoute("/admin")({
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-white/5 bg-[#141414] p-5">
+    <section className="anim-fade-up anim-visible rounded-xl border border-white/5 bg-[#141414] p-5">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-muted-foreground">{title}</h2>
       {children}
     </section>
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string | number }) {
+function Stat({ icon: Icon, label, value, delay = 0 }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string | number; delay?: number }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-[#141414] p-5">
+    <div className="anim-fade-up anim-visible rounded-xl border border-white/5 bg-[#141414] p-5" style={delay ? { animationDelay: `${delay}ms` } : undefined}>
       <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.04]">
         <Icon className="h-4 w-4 text-foreground" />
       </div>
       <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-extrabold text-foreground">{value}</div>
+      <div className="anim-pulse mt-1 text-2xl font-extrabold text-foreground">{value}</div>
     </div>
   );
 }
@@ -129,8 +129,8 @@ function AdminPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t("adminTitle")}</h1>
           <p className="mt-1 text-muted-foreground">{t("adminSub")}</p>
         </div>
-        {error && <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}
-        {notice && <p className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{notice}</p>}
+        {error && <p key={error} className="anim-shake rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}
+        {notice && <p key={notice} className="anim-pop anim-visible rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{notice}</p>}
         <input
           type="password"
           value={token}
@@ -139,10 +139,10 @@ function AdminPage() {
           className="w-full rounded-xl border border-white/10 bg-transparent px-5 py-3.5 text-foreground outline-none transition focus:border-foreground"
         />
         <div className="grid gap-4 sm:grid-cols-4">
-          <Stat icon={Activity} label={t("activeSessions")} value={monitoring?.activeSessions ?? "-"} />
-          <Stat icon={FileUp} label={t("queuedBuilds")} value={monitoring?.queuedBuilds ?? "-"} />
-          <Stat icon={Shield} label={t("scriptsLabel")} value={monitoring?.scripts.length ?? "-"} />
-          <Stat icon={Receipt} label={t("pendingLabel")} value={payments.filter((p) => p.status === "PENDING").length} />
+          <Stat icon={Activity} label={t("activeSessions")} value={monitoring?.activeSessions ?? "-"} delay={0} />
+          <Stat icon={FileUp} label={t("queuedBuilds")} value={monitoring?.queuedBuilds ?? "-"} delay={60} />
+          <Stat icon={Shield} label={t("scriptsLabel")} value={monitoring?.scripts.length ?? "-"} delay={120} />
+          <Stat icon={Receipt} label={t("pendingLabel")} value={payments.filter((p) => p.status === "PENDING").length} delay={180} />
         </div>
         <Card title={t("approvalsTitle")}>
           <div className="overflow-x-auto">
@@ -159,7 +159,7 @@ function AdminPage() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {payments.map((payment) => (
-                  <tr key={payment.id} className="text-foreground">
+                  <tr key={payment.id} className="anim-row-hover text-foreground">
                     <td className="py-3">{payment.user?.email ?? payment.user?.username ?? "-"}</td>
                     <td className="py-3">{payment.plan}</td>
                     <td className="py-3">{formatMoney(payment.amount, payment.currency)}</td>
@@ -193,7 +193,7 @@ function AdminPage() {
           <table className="w-full text-sm">
             <tbody className="divide-y divide-white/5">
               {(monitoring?.recentEvents ?? []).map((event) => (
-                <tr key={event.id} className="text-foreground">
+                <tr key={event.id} className="anim-row-hover text-foreground">
                   <td className="py-3">{event.type}</td>
                   <td className="py-3">{event.session?.script?.fileName ?? "-"}</td>
                   <td className="py-3">{event.session?.user?.email ?? event.session?.user?.username ?? "-"}</td>
@@ -213,7 +213,7 @@ function AdminPage() {
               <tbody className="divide-y divide-white/5">
                 {(monitoring?.sessions ?? []).map((session) => {
                   const stats = sessionStats(session.stats);
-                  return <tr key={session.id} className="text-foreground"><td className="py-3">{session.scriptFile ?? session.game ?? "-"}</td><td className="py-3">{session.robloxUsername ?? "-"}</td><td className="py-3">{stats.money}</td><td className="py-3">{stats.earned}</td><td className="py-3">{stats.hourly}</td><td className="py-3">{stats.level}</td><td className="py-3">{stats.task}</td><td className="py-3 text-muted-foreground">{formatDateTime(session.lastSeenAt)}</td></tr>;
+                  return <tr key={session.id} className="anim-row-hover text-foreground"><td className="py-3">{session.scriptFile ?? session.game ?? "-"}</td><td className="py-3">{session.robloxUsername ?? "-"}</td><td className="py-3">{stats.money}</td><td className="py-3">{stats.earned}</td><td className="py-3">{stats.hourly}</td><td className="py-3">{stats.level}</td><td className="py-3">{stats.task}</td><td className="py-3 text-muted-foreground">{formatDateTime(session.lastSeenAt)}</td></tr>;
                 })}
               </tbody>
             </table>

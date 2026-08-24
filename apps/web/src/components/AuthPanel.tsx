@@ -8,10 +8,12 @@ type AuthMode = "login" | "register";
 export function AuthPanel({
   initialMode = "login",
   initialLicenseKey,
+  licenseOptional = false,
   onDone
 }: {
   initialMode?: AuthMode;
   initialLicenseKey?: string;
+  licenseOptional?: boolean;
   onDone: (user: User) => void;
 }) {
   const { t } = useI18n();
@@ -35,7 +37,7 @@ export function AuthPanel({
       setError(t("errPasswordMismatch"));
       return;
     }
-    if (registering && licenseKey.length < 8) {
+    if (registering && !licenseOptional && licenseKey.length < 8) {
       setError(t("errLicenseKeyShort"));
       return;
     }
@@ -48,16 +50,17 @@ export function AuthPanel({
     setError("");
     const sentToken = captchaToken.current;
     try {
+      const registerBody: Record<string, unknown> = {
+        email: value("email"),
+        username: value("username"),
+        robloxUsername: value("robloxUsername") || undefined,
+        password,
+        turnstileToken: sentToken || undefined,
+      };
+      if (!licenseOptional) registerBody.licenseKey = licenseKey;
       const response = await api(registering ? "/auth/register" : "/auth/login", {
         method: "POST",
-        body: JSON.stringify(registering ? {
-          email: value("email"),
-          username: value("username"),
-          robloxUsername: value("robloxUsername") || undefined,
-          password,
-          licenseKey,
-          turnstileToken: sentToken || undefined
-        } : {
+        body: JSON.stringify(registering ? registerBody : {
           emailOrUsername: value("emailOrUsername"),
           password,
           totp: value("totp") || undefined,
@@ -94,17 +97,20 @@ export function AuthPanel({
   }
 
   return (
-    <section className="auth-panel" aria-label={registering ? t("authCreateAccount") : t("authSignIn")}>
+    <section className="auth-panel anim-scale-in anim-visible" aria-label={registering ? t("authCreateAccount") : t("authSignIn")}>
       <div className="auth-kicker">nznt's hub</div>
       <h1>{registering ? t("authCreateAccount") : t("authWelcomeBack")}</h1>
       <p>{registering ? t("authRegisterSub") : t("authLoginSub")}</p>
+      {registering && licenseOptional && (
+        <p className="auth-hint">{t("authRegisterNoKey")}</p>
+      )}
 
       <form className="auth-form" onSubmit={submit}>
         {registering ? (
           <>
             <Field label={t("authEmailLabel")} name="email" type="email" autoComplete="email" required />
             <Field label={t("username")} name="username" autoComplete="username" minLength={3} maxLength={32} required />
-            <Field label={t("authLicenseKeyLabel")} name="licenseKey" autoComplete="off" spellCheck={false} minLength={8} maxLength={128} required defaultValue={initialLicenseKey} />
+            {!licenseOptional && <Field label={t("authLicenseKeyLabel")} name="licenseKey" autoComplete="off" spellCheck={false} minLength={8} maxLength={128} required defaultValue={initialLicenseKey} />}
             <Field label={t("authRobloxUsername")} name="robloxUsername" autoComplete="off" maxLength={64} />
           </>
         ) : (
@@ -114,11 +120,11 @@ export function AuthPanel({
         {registering && <Field label={t("authConfirmPassword")} name="confirmPassword" type="password" autoComplete="new-password" minLength={8} maxLength={128} required />}
         {!registering && <Field label={t("authTotp")} name="totp" inputMode="numeric" autoComplete="one-time-code" />}
         {turnstileSiteKey && <Turnstile key={captchaEpoch} onToken={(token) => { captchaToken.current = token; }} />}
-        {error && <p className="auth-error" role="alert">{error}</p>}
-        <button className="auth-submit" type="submit" disabled={busy}>{busy ? t("authBusy") : registering ? t("authCreateAccount") : t("authSignIn")}</button>
+        {error && <p className="auth-error anim-shake" role="alert" key={error}>{error}</p>}
+        <button className="auth-submit anim-shimmer" type="submit" disabled={busy}>{busy ? t("authBusy") : registering ? t("authCreateAccount") : t("authSignIn")}</button>
       </form>
 
-      <button className="auth-discord" type="button" onClick={() => window.location.assign(`${apiUrl}/auth/discord/start`)}>
+      <button className="auth-discord anim-shimmer" type="button" onClick={() => window.location.assign(`${apiUrl}/auth/discord/start`)}>
         {t("authDiscord")}
       </button>
       <button className="auth-switch" type="button" onClick={switchMode}>

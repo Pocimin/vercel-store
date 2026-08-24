@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Nav, Footer } from "./index";
 import { useI18n } from "@/lib/i18n";
+import { useInView } from "@/lib/useInView";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -13,8 +14,9 @@ export const Route = createFileRoute("/privacy")({
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const { ref, inView } = useInView<HTMLElement>();
   return (
-    <section>
+    <section ref={ref} className={`anim-fade-up ${inView ? "anim-visible" : ""}`}>
       <h2 className="text-xl font-extrabold tracking-tight text-foreground">{title}</h2>
       <div className="mt-2 space-y-3 text-sm leading-relaxed text-muted-foreground">{children}</div>
     </section>

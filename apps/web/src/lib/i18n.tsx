@@ -215,6 +215,7 @@ const en: Dict = {
   authDiscord: "Continue with Discord",
   authSwitchLogin: "Already have an account? Sign in",
   authSwitchRegister: "Need an account? Register",
+  authRegisterNoKey: "You can register without a license key here — add it later via Redeem.",
   errPasswordMismatch: "Passwords do not match.",
   errLicenseKeyShort: "License key must be at least 8 characters.",
   errCaptchaSubmit: "Complete the captcha, then submit again.",
@@ -501,6 +502,7 @@ const id: Dict = {
   authDiscord: "Lanjut dengan Discord",
   authSwitchLogin: "Sudah punya akun? Masuk",
   authSwitchRegister: "Butuh akun? Daftar",
+  authRegisterNoKey: "Kamu bisa daftar tanpa key di sini — tambahkan nanti lewat Tukar.",
   errPasswordMismatch: "Kata sandi tidak sama.",
   errLicenseKeyShort: "Key lisensi minimal 8 karakter.",
   errCaptchaSubmit: "Selesaikan captcha, lalu kirim lagi.",
@@ -654,8 +656,8 @@ export function LanguageModal() {
   const { needsChoice, setLang } = useI18n();
   if (!needsChoice) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#141414] p-8 shadow-2xl">
+    <div className="anim-backdrop-in fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="anim-pop anim-visible w-full max-w-md rounded-2xl border border-white/10 bg-[#141414] p-8 shadow-2xl">
         <h2 className="text-center text-2xl font-extrabold tracking-tight text-foreground">
           Where are you from? / Kamu dari mana?
         </h2>

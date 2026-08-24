@@ -321,113 +321,113 @@ function PurchasePage() {
   }
 
   if (phase === "qris-wait" || phase === "paid" || phase === "expired") {
-    return (
-      <div className="min-h-screen bg-background">
-        <Nav />
-        <main className="mx-auto flex max-w-2xl flex-col items-center px-6 py-24">
-          {phase === "qris-wait" && order && (
-            <>
-              <h1 className="text-center text-4xl font-extrabold tracking-tight text-foreground">
-                {t("waitPayment")}
-              </h1>
-              <p className="mt-3 text-center text-muted-foreground">{t("qrisWaitSub")}</p>
-              <p className="mt-5 text-sm font-semibold text-foreground">
-                {t("payNow")} · <span className="brand-gradient">{selected.idr}</span>
-              </p>
-              <div className="mt-6 w-full max-w-sm">
-                <img
-                  src={order.qrUrl}
-                  alt="QRIS payment code"
-                  className="w-full rounded-2xl border border-white/10 bg-white p-4"
-                />
+  return (
+    <div className="min-h-screen bg-background">
+      <Nav />
+      <main className="mx-auto flex max-w-2xl flex-col items-center px-6 py-24">
+        {phase === "qris-wait" && order && (
+          <>
+            <h1 className="anim-fade-up anim-visible anim-delay-1 text-center text-4xl font-extrabold tracking-tight text-foreground">
+              {t("waitPayment")}
+            </h1>
+            <p className="anim-fade-up anim-visible anim-delay-2 mt-3 text-center text-muted-foreground">{t("qrisWaitSub")}</p>
+            <p className="anim-fade-up anim-visible anim-delay-3 mt-5 text-sm font-semibold text-foreground">
+              {t("payNow")} · <span className="brand-gradient">{selected.idr}</span>
+            </p>
+            <div className="anim-fade-up anim-visible anim-delay-3 anim-pulse-glow mt-6 w-full max-w-sm rounded-2xl">
+              <img
+                src={order.qrUrl}
+                alt="QRIS payment code"
+                className="w-full rounded-2xl border border-white/10 bg-white p-4"
+              />
+            </div>
+            <div className="anim-fade-up anim-visible anim-delay-4 mt-6 w-full max-w-sm space-y-2 rounded-xl border border-white/10 bg-[#141414] p-5 text-sm">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>{t("orderSn")}</span>
+                <span className="font-mono text-foreground">{order.orderSn}</span>
               </div>
-              <div className="mt-6 w-full max-w-sm space-y-2 rounded-xl border border-white/10 bg-[#141414] p-5 text-sm">
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span>{t("orderSn")}</span>
-                  <span className="font-mono text-foreground">{order.orderSn}</span>
-                </div>
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span>{t("planRow")}</span>
-                  <span className="text-foreground">{t(selected.labelKey)} · {selected.idr}</span>
-                </div>
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span>{t("qrExpiresIn")}</span>
-                  <span className={`font-mono text-foreground ${remaining <= 60 ? "text-[oklch(0.66_0.23_25)]" : ""}`}>
-                    {formatCountdown(remaining)}
-                  </span>
-                </div>
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>{t("planRow")}</span>
+                <span className="text-foreground">{t(selected.labelKey)} · {selected.idr}</span>
               </div>
-              <div className="mt-5 flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-200">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400" />
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>{t("qrExpiresIn")}</span>
+                <span className={`font-mono ${remaining <= 60 ? "text-[oklch(0.66_0.23_25)]" : "anim-shimmer-text"}`}>
+                  {formatCountdown(remaining)}
                 </span>
-                {t("waitPayment")} ({paymentStatus ?? "PENDING"})
               </div>
-            </>
-          )}
+            </div>
+            <div className="anim-fade-up anim-visible anim-delay-5 anim-pulse mt-5 flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-200">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-400" />
+              </span>
+              {t("waitPayment")} ({paymentStatus ?? "PENDING"})
+            </div>
+          </>
+        )}
 
-          {phase === "paid" && (
-            <>
-              <div className="mb-6 text-6xl">🎉</div>
-              <h1 className="text-center text-4xl font-extrabold tracking-tight text-foreground">
-                {t("paidTitle")}
-              </h1>
-              <p className="mt-4 max-w-md text-center text-muted-foreground">
-                {t("checkYourEmail")}
+        {phase === "paid" && (
+          <>
+            <div className="anim-pop anim-visible mb-6 text-6xl">🎉</div>
+            <h1 className="anim-fade-up anim-visible anim-delay-1 text-center text-4xl font-extrabold tracking-tight text-foreground">
+              {t("paidTitle")}
+            </h1>
+            <p className="anim-fade-up anim-visible anim-delay-2 mt-4 max-w-md text-center text-muted-foreground">
+              {t("checkYourEmail")}
+            </p>
+            <div className="anim-pop anim-visible anim-delay-1 mt-8 w-full max-w-sm rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-6 py-5 text-center">
+              <p className="text-sm font-semibold text-emerald-200">
+                {t("keyActiveFor")}: {t(selected.labelKey)}
               </p>
-              <div className="mt-8 w-full max-w-sm rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-6 py-5 text-center">
-                <p className="text-sm font-semibold text-emerald-200">
-                  {t("keyActiveFor")}: {t(selected.labelKey)}
-                </p>
-              </div>
-              <Link
-                to="/redeem"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
-              >
-                {t("redeemNow")} →
-              </Link>
-            </>
-          )}
+            </div>
+            <Link
+              to="/redeem"
+              className="anim-fade-up anim-visible anim-delay-2 anim-shimmer mt-8 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+            >
+              {t("redeemNow")} →
+            </Link>
+          </>
+        )}
 
-          {phase === "expired" && (
-            <>
-              <div className="mb-6 text-6xl">⏳</div>
-              <h1 className="text-center text-4xl font-extrabold tracking-tight text-foreground">
-                {t("paymentExpired")}
-              </h1>
-              <p className="mt-4 max-w-md text-center text-muted-foreground">{t("paymentExpiredSub")}</p>
-              <button
-                type="button"
-                onClick={reset}
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
-              >
-                {t("tryAgain")} →
-              </button>
-            </>
-          )}
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+        {phase === "expired" && (
+          <>
+            <div className="anim-pop anim-visible mb-6 text-6xl">⏳</div>
+            <h1 className="anim-fade-up anim-visible anim-delay-1 text-center text-4xl font-extrabold tracking-tight text-foreground">
+              {t("paymentExpired")}
+            </h1>
+            <p className="anim-fade-up anim-visible anim-delay-2 mt-4 max-w-md text-center text-muted-foreground">{t("paymentExpiredSub")}</p>
+            <button
+              type="button"
+              onClick={reset}
+              className="anim-fade-up anim-visible anim-delay-2 anim-shimmer mt-8 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+            >
+              {t("tryAgain")} →
+            </button>
+          </>
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+}
 
   if (phase === "manual-wait") {
     return (
       <div className="min-h-screen bg-background">
         <Nav />
         <main className="mx-auto flex max-w-2xl flex-col items-center px-6 py-24">
-          <div className="mb-6 text-6xl">📤</div>
-          <h1 className="text-center text-4xl font-extrabold tracking-tight text-foreground">
+          <div className="anim-pop anim-visible mb-6 text-6xl">📤</div>
+          <h1 className="anim-fade-up anim-visible anim-delay-1 text-center text-4xl font-extrabold tracking-tight text-foreground">
             {t("waitForReview")}
           </h1>
-          <p className="mt-4 max-w-md text-center text-muted-foreground">{t("waitForReviewSub")}</p>
-          <p className="mt-8 text-sm text-muted-foreground">
+          <p className="anim-fade-up anim-visible anim-delay-2 mt-4 max-w-md text-center text-muted-foreground">{t("waitForReviewSub")}</p>
+          <p className="anim-fade-up anim-visible anim-delay-3 mt-8 text-sm text-muted-foreground">
             {t("planRow")}: <span className="text-foreground">{t(selected.labelKey)} · {selected.idr}</span>
           </p>
           <Link
             to="/dashboard"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+            className="anim-fade-up anim-visible anim-delay-3 anim-shimmer mt-8 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
           >
             {t("goDashboard")} →
           </Link>
@@ -443,6 +443,7 @@ function PurchasePage() {
     <div className="min-h-screen bg-background">
       <Nav />
       <main className="mx-auto max-w-3xl px-6 py-16">
+      <div key={phase} className="anim-slide-in-right anim-visible">
         {phase === "rules" && (
           <Step n={1} title={t("beforePurchase")} subtitle={t("beforePurchaseSub")}>
             <ul className="ml-5 list-disc space-y-2 text-muted-foreground">
@@ -453,7 +454,7 @@ function PurchasePage() {
             <button
               type="button"
               onClick={() => goto("license")}
-              className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+              className="anim-shimmer mt-8 inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
             >
               {t("next")} →
             </button>
@@ -470,7 +471,7 @@ function PurchasePage() {
                     key={l.id}
                     type="button"
                     onClick={() => setLicense(l.id)}
-                    className={`rounded-xl border p-5 text-left transition ${
+                    className={`anim-card-hover rounded-xl border p-5 text-left transition ${
                       on ? "border-[oklch(0.74_0.19_47/0.6)] bg-[oklch(0.74_0.19_47/0.1)] shadow-[0_14px_44px_-22px_oklch(0.74_0.19_47/0.55)]" : "border-white/10 hover:border-white/20 hover:bg-white/[0.02]"
                     }`}
                   >
@@ -494,7 +495,7 @@ function PurchasePage() {
               <button
                 type="button"
                 onClick={() => goto("method")}
-                className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+                className="anim-shimmer inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
               >
                 {t("next")} →
               </button>
@@ -513,7 +514,7 @@ function PurchasePage() {
                     key={p.id}
                     type="button"
                     onClick={() => { setMethod(p.id); setError(""); }}
-                    className={`rounded-xl border p-5 text-left transition ${
+                    className={`anim-card-hover rounded-xl border p-5 text-left transition ${
                       on ? "border-[oklch(0.74_0.19_47/0.6)] bg-[oklch(0.74_0.19_47/0.1)] shadow-[0_14px_44px_-22px_oklch(0.74_0.19_47/0.55)]" : "border-white/10 hover:border-white/20 hover:bg-white/[0.02]"
                     }`}
                   >
@@ -579,7 +580,7 @@ function PurchasePage() {
               <button
                 type="button"
                 onClick={() => goto(method === "qris" ? "qris-setup" : "manual-setup")}
-                className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
+                className="anim-shimmer inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5"
               >
                 {t("next")} →
               </button>
@@ -633,7 +634,7 @@ function PurchasePage() {
               )}
 
               {error && (
-                <p className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200" role="alert">
+                <p key={error} className="anim-shake rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200" role="alert">
                   {error}
                 </p>
               )}
@@ -649,7 +650,7 @@ function PurchasePage() {
                 <button
                   type="submit"
                   disabled={!qrisReady}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+                  className="anim-shimmer inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   {submitting ? t("submitting") : t("agreeContinue")}
                 </button>
@@ -702,7 +703,8 @@ function PurchasePage() {
               ) : (
                 <div className="mt-4">
                   <p className="mb-3 text-xs font-semibold text-foreground">{t("registerBeforeProof")}</p>
-                  <AuthPanel onDone={(nextUser) => setUser(nextUser)} />
+                  <p className="mb-3 text-xs text-muted-foreground">{t("authRegisterNoKey")}</p>
+                  <AuthPanel licenseOptional onDone={(nextUser) => setUser(nextUser)} />
                 </div>
               )}
             </div>
@@ -745,7 +747,7 @@ function PurchasePage() {
               )}
 
               {error && (
-                <p className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200" role="alert">
+                <p key={error} className="anim-shake rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200" role="alert">
                   {error}
                 </p>
               )}
@@ -761,7 +763,7 @@ function PurchasePage() {
                 <button
                   type="submit"
                   disabled={!manualReady}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+                  className="anim-shimmer inline-flex items-center gap-2 rounded-full bg-[#f3efe7] px-7 py-3.5 text-base font-semibold text-[#111] transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   {submitting ? t("submitting") : t("agreeContinue")}
                 </button>
@@ -776,6 +778,7 @@ function PurchasePage() {
           <span className="text-foreground">{t(selected.labelKey)}</span>{" · "}
           <span className="text-foreground">{selected.idr}</span>
         </div>
+      </div>
       </main>
       <Footer />
     </div>
